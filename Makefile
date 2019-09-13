@@ -78,12 +78,14 @@ distclean: clean
 	@echo Deleting $(LIB_DIR)/*...
 	@$(RM) $(LIB_DIR)/*
 
-# Install the libraries into the correct location (/usr/lib) #
+# Install the libraries and include files into the correct location #
 install:
-	@echo Installing lib$(BIN).a in /usr/lib...
-	@mv $(LIB_DIR)/lib$(BIN).a /usr/lib/lib$(BIN).a
-	@echo Installing lib$(BIN).so in /usr/lib...
-	@mv $(LIB_DIR)/lib$(BIN).so /usr/lib/lib$(BIN).so
+	@echo Installing $(BIN).h in /usr/local/include...
+	@cp $(SRC_DIR)/$(BIN).h /usr/local/include/$(BIN).h
+	@echo Installing lib$(BIN).a in /usr/local/lib...
+	@mv $(LIB_DIR)/lib$(BIN).a /usr/local/lib/lib$(BIN).a
+	@echo Installing lib$(BIN).so in /usr/local/lib...
+	@mv $(LIB_DIR)/lib$(BIN).so /usr/local/lib/lib$(BIN).so
 
 # Create the static library #
 liba: $(LIB_DIR)/lib$(BIN).a
@@ -91,9 +93,11 @@ liba: $(LIB_DIR)/lib$(BIN).a
 # Create the shared library #
 libso: $(LIB_DIR)/lib$(BIN).so
 
-# Uninstall the libraries from /usr/lib #
+# Uninstall the libraries from /usr/local/lib #
 uninstall:
-	@echo Uninstalling lib$(BIN).a from /usr/lib...
-	@rm -rf /usr/lib/lib$(BIN).a
-	@echo Uninstalling lib$(BIN).so from /usr/lib...
-	@rm -rf /usr/lib/lib$(BIN).so
+	@echo Uninstalling $(BIN).h from /usr/local/include...
+	@rm -rf /usr/local/include/$(BIN).h
+	@echo Uninstalling lib$(BIN).a from /usr/local/lib...
+	@rm -rf /usr/local/lib/lib$(BIN).a
+	@echo Uninstalling lib$(BIN).so from /usr/local/lib...
+	@rm -rf /usr/local/lib/lib$(BIN).so
