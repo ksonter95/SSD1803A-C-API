@@ -57,6 +57,9 @@ bin/**
 # Application object and dependencies location #
 build/**
 
+# Compiled library location #
+lib/**
+
 # VS configuration #
 **/.vscode
 **/.vs
