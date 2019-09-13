@@ -50,3 +50,13 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Application binary location #
+bin/**
+
+# Application object and dependencies location #
+build/**
+
+# VS configuration #
+**/.vscode
+**/.vs
