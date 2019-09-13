@@ -29,7 +29,7 @@ DEP := $(OBJ:%.o=%.d)
 LIB := -pthread -lpigpio -lrt -lz
 
 # Default target named after the binary #
-$(BIN): $(LIB_DIR)/lib$(BIN).a
+$(BIN): $(LIB_DIR)/lib$(BIN).a $(LIB_DIR)/lib$(BIN).so
 
 # Link the object files to create the static library #
 $(LIB_DIR)/lib$(BIN).a: $(OBJ)
@@ -61,10 +61,10 @@ $(BUILD_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) $(INC:%=-I %) -MMD -c $< -o $@
 	@echo
 
-.PHONY: all clean distclean liba libso
+.PHONY: all clean distclean liba libso install uninstall
 
 # Default build target #
-all: $(LIB_DIR)/lib$(BIN).a
+all: $(LIB_DIR)/lib$(BIN).a $(LIB_DIR)/lib$(BIN).so
 
 # Remove the object and dependency files #
 clean:
@@ -78,8 +78,22 @@ distclean: clean
 	@echo Deleting $(LIB_DIR)/*...
 	@$(RM) $(LIB_DIR)/*
 
+# Install the libraries into the correct location (/usr/lib) #
+install:
+	@echo Installing lib$(BIN).a in /usr/lib...
+	@mv $(LIB_DIR)/lib$(BIN).a /usr/lib/lib$(BIN).a
+	@echo Installing lib$(BIN).so in /usr/lib...
+	@mv $(LIB_DIR)/lib$(BIN).so /usr/lib/lib$(BIN).so
+
 # Create the static library #
 liba: $(LIB_DIR)/lib$(BIN).a
 
 # Create the shared library #
 libso: $(LIB_DIR)/lib$(BIN).so
+
+# Uninstall the libraries from /usr/lib #
+uninstall:
+	@echo Uninstalling lib$(BIN).a from /usr/lib...
+	@rm -rf /usr/lib/lib$(BIN).a
+	@echo Uninstalling lib$(BIN).so from /usr/lib...
+	@rm -rf /usr/lib/lib$(BIN).so
