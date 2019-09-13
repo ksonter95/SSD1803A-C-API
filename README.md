@@ -1,5 +1,5 @@
 # SSD1803A-C-API
-C library for the SSD1803A LCB Display MPU
+C library for the SSD1803A LCD Display MPU
 
 ## Installation ##
 To compile the source code into the static (libssd1803a.a) and shared (libssd1803a.so) libraries, simply run the command:
