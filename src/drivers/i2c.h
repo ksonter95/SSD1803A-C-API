@@ -1,66 +1,73 @@
 /* ========================================================================== */
-/**@file src/ssd1803a.h
+/**@file src/drivers/i2c.h
  *
- *  API for the SSD1803A Display MPU.
+ *  I2C interface to the MPU.
  *
  * ==========================================================================\n
  * Project:		SSD1803A-C-API
  * System:		Raspberry Pi
- * Created:		13/09/2019 16:33:24 PM ksonter \n
+ * Created:		13/09/2019 12:42:14 PM ksonter \n
  * Copyright (c) 2019, Kieran Sonter
  * ========================================================================== */
-#ifndef SRC_SSD1803A_H_
-#define SRC_SSD1803A_H_
+#ifndef SRC_DRIVERS_I2C_H_
+#define SRC_DRIVERS_I2C_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
 
 /* === Includes ============================================================= */
+#include <stdint.h>
 #include <stdbool.h>
 
-/* === Defines ============================================================== */
-/* I2C Bus */
-#define I2C_BUS_0                       0
-#define I2C_BUS_1                       1
+#include <ssd1803a.h>
 
-/* I2C Address LSB(it) */
-#define SA0_ADDRESS_0x3C                0
-#define SA0_ADDRESS_0x3D                1
-#define SA0_LOW                         0
-#define SA0_HIGH                        1
+/* === Defines ============================================================== */
 
 /* === Enumerations ========================================================= */
-enum StatusCodes {
-	STATUS_FAILED_WRITE					= -0x52, // -82
-	STATUS_INVALID_PARAM				= -0x51, // -81
-	STATUS_INVALID_FLAGS                = -0x4D, // -77
-	STATUS_INVALID_ADDRESS              = -0x4B, // -75
-	STATUS_INVALID_BUS                  = -0x4A, // -74
-	STATUS_FAILED_OPEN                  = -0x47, // -71
-	STATUS_INVALID_HANDLE               = -0x19, // -25
-	STATUS_NO_HANDLE                    = -0x18, // -24
-	STATUS_NOT_INITIALISED              = -0x01, // -1
-	STATUS_OK,
-	STATUS_ALREADY_OPEN,
-};
 
 /* === Structures =========================================================== */
 
 /* === Typedefs ============================================================= */
-typedef enum StatusCodes                status_t;
-typedef bool							i2c_bus_t;
-typedef bool							sa0_bit_t;
 
 /* === Global Variables ===================================================== */
 
 /* === Function Prototypes ================================================== */
+
 /* ========================================================================== */
-/**@brief TODO: Insert brief.
+/**@brief Initialises the I2C hardware drivers.
  * ========================================================================== */
+status_t i2c_init(
+		i2c_bus_t bus,
+		sa0_bit_t sa0
+);
+
+/* ========================================================================== */
+/**@brief Deinitialises the I2C hardware drivers.
+ * ========================================================================== */
+status_t i2c_deinit(void);
+
+/* ========================================================================== */
+/**@brief Conducts an I2C write operation.
+ * ========================================================================== */
+status_t i2c_write(
+		uint8_t *commands,
+		uint8_t commandsLen,
+		uint8_t *data,
+		uint8_t dataLen
+);
+
+/* ========================================================================== */
+/**@brief Conducts an I2C read operation.
+ * ========================================================================== */
+status_t i2c_read(
+		bool readRam,
+		uint8_t *data,
+		uint8_t dataLen
+);
 
 #ifdef __cplusplus
 }
 #endif  // __cplusplus
 
-#endif  // SRC_SSD1803A_H_
+#endif  // SRC_DRIVERS_I2C_H_
