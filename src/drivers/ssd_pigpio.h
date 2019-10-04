@@ -1,25 +1,22 @@
 /* ========================================================================== */
-/**@file src/drivers/i2c.h
+/**@file src/drivers/ssd_pigpio.h
  *
- *  I2C interface to the MPU.
+ *  Interface to the pigpio.
  *
  * ==========================================================================\n
  * Project:		SSD1803A-C-API
  * System:		Raspberry Pi
- * Created:		13/09/2019 12:42:14 PM ksonter \n
+ * Created:		02/10/2019 08:33:09 AM ksonter \n
  * Copyright (c) 2019, Kieran Sonter
  * ========================================================================== */
-#ifndef SRC_DRIVERS_I2C_H_
-#define SRC_DRIVERS_I2C_H_
+#ifndef SRC_DRIVERS_SSD_PIGPIO_H_
+#define SRC_DRIVERS_SSD_PIGPIO_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
 
 /* === Includes ============================================================= */
-#include <stdint.h>
-#include <stdbool.h>
-
 #include <ssd1803a.h>
 
 /* === Defines ============================================================== */
@@ -35,39 +32,27 @@ extern "C" {
 /* === Function Prototypes ================================================== */
 
 /* ========================================================================== */
-/**@brief Initialises the I2C hardware drivers.
+/**@brief Initialises the pigpio interface.
  * ========================================================================== */
-status_t i2c_init(
-		i2c_bus_t bus,
-		sa0_bit_t sa0
-);
+status_t pigpio_init(void);
 
 /* ========================================================================== */
-/**@brief Deinitialises the I2C hardware drivers.
+/**@brief Deinitialises the pigpio interface.
  * ========================================================================== */
-status_t i2c_deinit(void);
+void pigpio_deinit(void);
 
 /* ========================================================================== */
-/**@brief Conducts an I2C write operation.
+/**@brief Returns whether or not the pigpio interface is initialised.
  * ========================================================================== */
-status_t i2c_write(
-		uint8_t *commands,
-		uint8_t commandsLen,
-		uint8_t *data,
-		uint8_t dataLen
-);
+bool pigpio_is_initialised(void);
 
 /* ========================================================================== */
-/**@brief Conducts an I2C read operation.
+/**@brief Sleep for a certain amount of time.
  * ========================================================================== */
-status_t i2c_read(
-		bool readRam,
-		uint8_t *data,
-		uint8_t dataLen
-);
+status_t pigpio_sleep(double seconds);
 
 #ifdef __cplusplus
 }
 #endif  // __cplusplus
 
-#endif  // SRC_DRIVERS_I2C_H_
+#endif  // SRC_DRIVERS_SSD_PIGPIO_H_

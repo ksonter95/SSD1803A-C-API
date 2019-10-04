@@ -1,5 +1,5 @@
 /* ========================================================================== */
-/**@file src/drivers/i2c.c
+/**@file src/drivers/ssd_i2c.c
  *
  *  I2C interface to the MPU.
  *
@@ -14,9 +14,11 @@
  * ========================================================================== */
 
 /* === Includes ============================================================= */
-#include <i2c.h>
+#include "ssd_i2c.h"
 
 #include <pigpio.h>
+
+#include "ssd_pigpio.h"
 
 /* === Defines ============================================================== */
 /* I2C configuration */
@@ -46,7 +48,6 @@ int16_t m_I2cHandle = (int16_t) STATUS_INVALID_HANDLE;
 /* ========================================================================== */
 /**
  * @details This function implements the following objectives:
- *		-# Initialise the pigpio library.
  *		-# Open the I2C interface to the MPU.
  *
  * @param [in]		bus I2C bus number on the RPi that is connected to the I2C
@@ -55,8 +56,8 @@ int16_t m_I2cHandle = (int16_t) STATUS_INVALID_HANDLE;
  * display MPU can be found.
  *
  * @retval STATUS_OK If the I2C hardware was successfully initialised.
- * @retval STATUS_NOT_INITIALISED If the pigpio library failed to be
- * successfully initialised.
+ * @retval STATUS_NOT_INITIALISED If the pigpio library has not been previously
+ * initialised with a call to pigpio_init().
  * @retval STATUS_NO_HANDLE If there is no available handle to assign to the
  * display MPU I2C bus.
  * @retval STATUS_FAILED_OPEN If I2C interface failed to be opened.
@@ -71,8 +72,8 @@ status_t i2c_init(
 		i2c_bus_t bus,
 		sa0_bit_t sa0) {
 
-	/* Initialise the pigpio library */
-	if (gpioInitialise() < STATUS_OK) {
+	/* pigpio library is not initialised */
+	if (!pigpio_is_initialised()) {
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -98,7 +99,6 @@ status_t i2c_init(
 /**
  * @details This function implements the following objectives:
  *		-# Close the I2C interface to the MPU.
- *		-# Deinitialise the pigpio library.
  *
  * retval STATUS_OK If the I2C hardware was successfully deinitialised.
  * retval STATUS_INVALID_HANDLE If the I2C hardware was not successfully
@@ -110,13 +110,11 @@ status_t i2c_deinit(void) {
 
 	/* I2C interface has not yet been opened */
 	if (m_I2cHandle == STATUS_INVALID_HANDLE) {
-		ret = STATUS_INVALID_HANDLE;
-	} else if (i2cClose((uint16_t)m_I2cHandle) < STATUS_OK) {
-		ret = STATUS_INVALID_HANDLE;
+		return STATUS_INVALID_HANDLE;
 	}
-
-	/* Deinitialise the pigpio library */
-	gpioTerminate();
+	
+	ret = i2cClose((uint16_t)m_I2cHandle);
+	m_I2cHandle = STATUS_INVALID_HANDLE;
 	return ret;
 
 }
@@ -130,9 +128,9 @@ status_t i2c_deinit(void) {
  *
  * The transaction order is shown below:
  * S Addr Wr [A] Control #1 [A] Command [A] Control #2 [A]   Data [A]    P
- *              |                       |           |             |
- *              +------- n times -------+           +-- m times --+
- *				  Control/Command words				   Data bytes
+ *              |                       |                 |             |
+ *              +------- n times -------+                 +-- m times --+
+ *				  Control/Command words				         Data bytes
  * Where:
  * 		- S: Start bit
  * 		- P: Stop bit
@@ -288,7 +286,15 @@ status_t i2c_write(
  * @pre If readRam == false, then dataLen == 2.
  * @pre dataLen > 0
  *
- * @retval TODO: Insert return values
+ * @retval STATUS_OK If the data was successfully received from the display MPU.
+ * @retval STATUS_INVALID_HANDLE If the I2C hardware was not successfully
+ * initialised before calling this function.
+ * @retval STATUS_INVALID_PARAM If the number of bytes to be read from the
+ * display MPU is <= 0 (dataLen <= 0).
+ * @retval STATUS_FAILED_WRITE If the message failed to be successfully written
+ * to the display MPU.
+ * @retval STATUS_FAILED_READ If the message failed to be successfully read from
+ * the display MPU.
  * ========================================================================== */
 status_t i2c_read(
 		bool readRam,
@@ -296,19 +302,20 @@ status_t i2c_read(
 		uint8_t dataLen) {
 	
 	/* Transmit the control byte */
-	status_t ret = (status_t) i2cWriteByte(
+	int32_t ret = i2cWriteByte(
 			(uint16_t)m_I2cHandle,
 			readRam ? CONTROL_BYTE_DATA : CONTROL_BYTE_COMMAND_LAST
 	);
 	if (ret < STATUS_OK) {
-		return ret;
+		return (status_t)ret;
 	}
 
 	/* Receive the data */
-	return (status_t) i2cReadDevice(
+	ret = i2cReadDevice(
 			(uint16_t)m_I2cHandle,
 			(char *)data,
 			dataLen
 	);
+	return (ret < STATUS_OK) ? (status_t)ret : STATUS_OK;
 
 }
