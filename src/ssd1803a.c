@@ -1049,7 +1049,7 @@ status_t ssd_write_text(char *text) {
 		return STATUS_NOT_INITIALISED;
 	}
 
-	status_t ret = i2c_write(NULL, 0, (uint8_t *)text, sizeof(text) - 1);
+	status_t ret = i2c_write(NULL, 0, (uint8_t *)text, strlen(text));
 	if (ret != STATUS_OK) {
 		return ret;
 	}
