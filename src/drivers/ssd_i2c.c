@@ -331,7 +331,7 @@ status_t i2c_read(
 			(char *)data,
 			dataLen
 	);
-	if (ret != STATUS_OK) {
+	if (ret < STATUS_OK) {
 		LOG_TO_STDERR();
 	}
 	return (ret < STATUS_OK) ? (status_t)ret : STATUS_OK;

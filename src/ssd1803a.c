@@ -358,7 +358,7 @@ status_t ssd_deinit(void) {
 	i2c_deinit();
 	gpio_disable_display();
 	gpio_deinit();
-	pigpio_deinit();
+	//pigpio_deinit();
 	return STATUS_OK;
 
 }
