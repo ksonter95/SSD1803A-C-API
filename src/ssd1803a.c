@@ -1044,12 +1044,18 @@ status_t ssd_write_symbol(uint8_t symbolID) {
 
 status_t ssd_write_text(char *text) {
 
+	/* Validate the text to be written */
+	size_t length = strlen(text);
+	if (length > DDRAM_SIZE) {
+		return STATUS_INVALID_PARAM;
+	}
+
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
 		return STATUS_NOT_INITIALISED;
 	}
 
-	status_t ret = i2c_write(NULL, 0, (uint8_t *)text, strlen(text));
+	status_t ret = i2c_write(NULL, 0, (uint8_t *)text, (uint8_t)length);
 	if (ret != STATUS_OK) {
 		return ret;
 	}
