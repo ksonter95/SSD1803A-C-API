@@ -23,8 +23,10 @@ extern "C" {
 /* === Defines ============================================================== */
 #define SSD_DEBUG
 #ifdef SSD_DEBUG
-#define LOG_TO_STDERR()	\
-		fprintf(stderr, "%s:%d - %s()\n", __FILE__, __LINE__, __func__)
+#define LOG_TO_STDERR()	{ \
+		fprintf(stderr, "%s:%d - %s()\n", __FILE__, __LINE__, __func__); \
+		fflush(stderr); \
+}
 #else
 #define LOG_TO_STDERR()
 #endif // SSD_DEBUG
