@@ -216,6 +216,7 @@ status_t ssd_init(
 		m_BS0 = internalDividerBias & BS0_MASK;
 		m_BS1 = internalDividerBias & BS1_MASK;
 	} else if (internalDividerBias != DEFAULT) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -224,6 +225,7 @@ status_t ssd_init(
 			(boosterAndRegulatorCircuit == BOOSTER_AND_REGULATOR_INTERNAL)) {
 		m_Bon = boosterAndRegulatorCircuit;
 	} else {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -232,6 +234,7 @@ status_t ssd_init(
 			(dividerCircuit == DIVIDER_CIRCUIT_INTERNAL)) {
 		m_Don = dividerCircuit;
 	} else {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -241,6 +244,7 @@ status_t ssd_init(
 			(temperatureCoefficient == NEG_0_15_PERCENT_PER_DEG_C)) {
 		m_TCx = temperatureCoefficient;
 	} else if (temperatureCoefficient != DEFAULT) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -248,6 +252,7 @@ status_t ssd_init(
 	if ((rom == ROM_A) || (rom == ROM_B) || (rom == ROM_C)) {
 		m_ROMx = rom;
 	} else if (rom != DEFAULT) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -257,16 +262,19 @@ status_t ssd_init(
 	/* Initialise the pigpio library */
 	status_t ret = pigpio_init();
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 
 	/* Initialise and enable the GPIO hardware */
 	ret = gpio_init(rpiResetPin, resetPinActiveLevel);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 	ret = gpio_enable_display();
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		gpio_deinit();
 		return ret;
 	}
@@ -274,6 +282,7 @@ status_t ssd_init(
 	/* Initialise the I2C */
 	ret = i2c_init(rpiI2CBus, sa0);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		gpio_disable_display();
 		gpio_deinit();
 		return ret;
@@ -293,6 +302,7 @@ status_t ssd_init(
 	commands[9] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	ret = i2c_write(commands, 10, NULL, 0);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		i2c_deinit();
 		gpio_disable_display();
 		gpio_deinit();
@@ -304,6 +314,7 @@ status_t ssd_init(
 	uint8_t data = m_TCx;
 	ret = i2c_write(commands, 1, &data, 1);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		i2c_deinit();
 		gpio_disable_display();
 		gpio_deinit();
@@ -315,6 +326,7 @@ status_t ssd_init(
 	data = m_ROMx;
 	ret = i2c_write(commands, 1, &data, 1);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		i2c_deinit();
 		gpio_disable_display();
 		gpio_deinit();
@@ -325,6 +337,7 @@ status_t ssd_init(
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	ret = i2c_write(commands, 1, NULL, 0);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		i2c_deinit();
 		gpio_disable_display();
 		gpio_deinit();
@@ -337,6 +350,7 @@ status_t ssd_deinit(void) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -363,6 +377,7 @@ status_t ssd_display_configure(
 			(writeDirection == REVERSE_WRITE_DIRECTION)) {
 		m_ID = writeDirection;
 	} else if (writeDirection != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -374,6 +389,7 @@ status_t ssd_display_configure(
 		m_N = numberOfLines & N_MASK;
 		m_NW = numberOfLines & NW_MASK;
 	} else if (numberOfLines != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -381,6 +397,7 @@ status_t ssd_display_configure(
 	if ((blinkEnable == BLINK_ENABLED) || (blinkEnable == BLINK_DISABLED)) {
 		m_BE = blinkEnable;
 	} else if (blinkEnable != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -389,6 +406,7 @@ status_t ssd_display_configure(
 			(shiftOrScroll == DOT_SCROLL_ENABLED)) {
 		m_DHd = shiftOrScroll;
 	} else if (shiftOrScroll != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -396,6 +414,7 @@ status_t ssd_display_configure(
 	if (shiftOrScrollLinesEnabled <= SHIFT_SCROLL_LINES_MAX) {
 		m_DHSx = shiftOrScrollLinesEnabled;
 	} else if (shiftOrScrollLinesEnabled != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -404,6 +423,7 @@ status_t ssd_display_configure(
 			(horizontalDisplayDirection == REVERSE_HORIZONTAL_DIRECTION)) {
 		m_BDS = horizontalDisplayDirection;
 	} else if (horizontalDisplayDirection != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -412,11 +432,13 @@ status_t ssd_display_configure(
 			(verticalDisplayDirection == REVERSE_VERTICAL_DIRECTION)) {
 		m_BDC = verticalDisplayDirection;
 	} else if (verticalDisplayDirection != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -432,7 +454,11 @@ status_t ssd_display_configure(
 	commands[7] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
 	commands[8] = COMMAND_SHIFT_SCROLL_ENABLE | m_DHSx;
 	commands[9] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	return i2c_write(commands, 10, NULL, 0);
+	status_t ret = i2c_write(commands, 10, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -449,8 +475,10 @@ status_t ssd_display_enable(void) {
 	commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	status_t ret = i2c_write(commands, 3, NULL, 0);
 	if (ret == STATUS_INVALID_HANDLE) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	} else if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 	pigpio_sleep(0.001);
@@ -459,8 +487,10 @@ status_t ssd_display_enable(void) {
 	commands[0] = COMMAND_DISPLAY_ON_OFF_CONTROL | m_D | m_C | m_B;
 	ret = i2c_write(commands, 1, NULL, 0);
 	if (ret == STATUS_INVALID_HANDLE) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	} else if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 	pigpio_sleep(0.001);
@@ -473,7 +503,10 @@ status_t ssd_display_enable(void) {
 	commands[4] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	ret = i2c_write(commands, 5, NULL, 0);
 	if (ret == STATUS_INVALID_HANDLE) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
+	} else if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 	}
 	pigpio_sleep(0.025);
 	return ret;
@@ -500,8 +533,10 @@ status_t ssd_display_disable(uint8_t lowPowerMode) {
 	commands[4] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	status_t ret = i2c_write(commands, 5, NULL, 0);
 	if (ret == STATUS_INVALID_HANDLE) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	} else if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 	pigpio_sleep(0.025);
@@ -510,8 +545,10 @@ status_t ssd_display_disable(uint8_t lowPowerMode) {
 	commands[0] = COMMAND_DISPLAY_ON_OFF_CONTROL | m_D | m_C | m_B;
 	ret = i2c_write(commands, 1, NULL, 0);
 	if (ret == STATUS_INVALID_HANDLE) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	} else if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 	pigpio_sleep(0.001);
@@ -522,8 +559,10 @@ status_t ssd_display_disable(uint8_t lowPowerMode) {
 	commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	ret = i2c_write(commands, 3, NULL, 0);
 	if (ret == STATUS_INVALID_HANDLE) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	} else if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 	pigpio_sleep(0.001);
@@ -543,6 +582,7 @@ status_t ssd_cursor_configure(
 			(cursorBlink == CURSOR_BLINK_ENABLED)) {
 		m_B = cursorBlink;
 	} else if (cursorBlink != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -550,6 +590,7 @@ status_t ssd_cursor_configure(
 	if (cursorBlinkRate <= BLINK_FREQUENCY_MAX) {
 		m_Fx = cursorBlinkRate;
 	} else if (cursorBlinkRate != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -558,6 +599,7 @@ status_t ssd_cursor_configure(
 			(cursorShadow == CURSOR_SHADOW_ENABLED)) {
 		m_BW = cursorShadow;
 	} else if (cursorShadow != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
@@ -566,11 +608,13 @@ status_t ssd_cursor_configure(
 			(cursorStationary == CURSOR_STATIONARY)) {
 		m_S = cursorStationary;
 	} else if (cursorStationary != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -583,7 +627,11 @@ status_t ssd_cursor_configure(
 	commands[4] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[5] = COMMAND_DISPLAY_ON_OFF_CONTROL | m_D | m_C | m_B;
 	commands[6] = COMMAND_ENTRY_MODE_SET | m_ID | m_S;
-	return i2c_write(commands, 7, NULL, 0);
+	status_t ret = i2c_write(commands, 7, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -594,6 +642,7 @@ status_t ssd_cursor_enable(void) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -601,7 +650,11 @@ status_t ssd_cursor_enable(void) {
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_DISPLAY_ON_OFF_CONTROL | m_D | m_C | m_B;
-	return i2c_write(commands, 2, NULL, 0);
+	status_t ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -612,6 +665,7 @@ status_t ssd_cursor_disable(void) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -619,7 +673,11 @@ status_t ssd_cursor_disable(void) {
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_DISPLAY_ON_OFF_CONTROL | m_D | m_C | m_B;
-	return i2c_write(commands, 2, NULL, 0);
+	status_t ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -637,6 +695,7 @@ status_t ssd_set_font(
 		m_DH = fontHeight & DH_MASK;
 		m_UDx = fontHeight & UD_MASK;
 	} else if (fontHeight != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -645,6 +704,7 @@ status_t ssd_set_font(
 			(fontWidth == FONT_WIDTH_SIX_DOTS)) {
 		m_FW = fontWidth;
 	} else if (fontWidth != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -652,11 +712,13 @@ status_t ssd_set_font(
 	if ((fontColour == FONT_BLACK) || (fontColour == FONT_WHITE)) {
 		m_REV = fontColour;
 	} else if (fontWidth != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -667,7 +729,11 @@ status_t ssd_set_font(
 	commands[2] = COMMAND_HEIGHT_BIAS_SHIFT | m_UDx | m_BS1 | m_DHd;
 	commands[3] = COMMAND_EXTENDED_FUNCTION_SET | m_FW | m_BW | m_NW;
 	commands[4] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	return i2c_write(commands, 5, NULL, 0);
+	status_t ret = i2c_write(commands, 5, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -677,11 +743,13 @@ status_t ssd_set_brightness(uint8_t displayBrightness) {
 	if (displayBrightness <= MAX_BRIGHTNESS) {
 		m_Rabx = displayBrightness;
 	} else if (displayBrightness != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -690,17 +758,22 @@ status_t ssd_set_brightness(uint8_t displayBrightness) {
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
 	commands[1] = COMMAND_FOLLOWER_CONTROL | m_Don | m_Rabx;
 	commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	return i2c_write(commands, 3, NULL, 0);
+	status_t ret = i2c_write(commands, 3, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
 status_t ssd_increment_brightness(void) {
 
 	/* Set the display brightness */
-	m_Rabx = (uint8_t)(m_Rabx + (m_Rabx != MAX_BRIGHTNESS));
+	m_Rabx = (uint8_t)(m_Rabx - (m_Rabx != MIN_BRIGHTNESS));
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -709,17 +782,22 @@ status_t ssd_increment_brightness(void) {
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
 	commands[1] = COMMAND_FOLLOWER_CONTROL | m_Don | m_Rabx;
 	commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	return i2c_write(commands, 3, NULL, 0);
+	status_t ret = i2c_write(commands, 3, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
 status_t ssd_decrement_brightness(void) {
 
 	/* Set the display brightness */
-	m_Rabx = (uint8_t)(m_Rabx - (m_Rabx != MIN_BRIGHTNESS));
+	m_Rabx = (uint8_t)(m_Rabx + (m_Rabx != MAX_BRIGHTNESS));
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -728,7 +806,11 @@ status_t ssd_decrement_brightness(void) {
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
 	commands[1] = COMMAND_FOLLOWER_CONTROL | m_Don | m_Rabx;
 	commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	return i2c_write(commands, 3, NULL, 0);
+	status_t ret = i2c_write(commands, 3, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -740,11 +822,13 @@ status_t ssd_set_contrast(uint8_t displayContrast) {
 		m_Ch = (m_Cx >> CH_SHIFT) & CH_MASK;
 		m_Cl = m_Cx & CL_MASK;
 	} else if (displayContrast != UNCHANGED) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -754,7 +838,11 @@ status_t ssd_set_contrast(uint8_t displayContrast) {
 	commands[1] = COMMAND_POWER_ICON_CONTRAST | m_Ion | m_Bon | m_Ch;
 	commands[2] = COMMAND_CONTRAST_SET | m_Cl;
 	commands[3] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	return i2c_write(commands, 4, NULL, 0);
+	status_t ret = i2c_write(commands, 4, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -767,6 +855,7 @@ status_t ssd_increment_contrast(void) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -776,7 +865,11 @@ status_t ssd_increment_contrast(void) {
 	commands[1] = COMMAND_POWER_ICON_CONTRAST | m_Ion | m_Bon | m_Ch;
 	commands[2] = COMMAND_CONTRAST_SET | m_Cl;
 	commands[3] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	return i2c_write(commands, 4, NULL, 0);
+	status_t ret = i2c_write(commands, 4, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -789,6 +882,7 @@ status_t ssd_decrement_contrast(void) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -798,7 +892,11 @@ status_t ssd_decrement_contrast(void) {
 	commands[1] = COMMAND_POWER_ICON_CONTRAST | m_Ion | m_Bon | m_Ch;
 	commands[2] = COMMAND_CONTRAST_SET | m_Cl;
 	commands[3] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	return i2c_write(commands, 4, NULL, 0);
+	status_t ret = i2c_write(commands, 4, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -806,12 +904,17 @@ status_t ssd_clear_display(void) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	uint8_t commands[1];
 	commands[0] = COMMAND_CLEAR_DISPLAY;
-	return i2c_write(commands, 1, NULL, 0);
+	status_t ret = i2c_write(commands, 1, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -822,13 +925,18 @@ status_t ssd_move_cursor_line1(void) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
-	return i2c_write(commands, 2, NULL, 0);
+	status_t ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -837,6 +945,7 @@ status_t ssd_move_cursor_line2(void) {
 	/* Set the DDRAM counter */
 	uint8_t lines = (m_N | m_NW);
 	if (lines == DISPLAY_ONE_LINE) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_ADDRESS;
 	} else if (lines == DISPLAY_TWO_LINES) {
 		m_AC = MIN_DDRAM_DOUBLE_LINE_LINE2;
@@ -848,13 +957,18 @@ status_t ssd_move_cursor_line2(void) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
-	return i2c_write(commands, 2, NULL, 0);
+	status_t ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -863,6 +977,7 @@ status_t ssd_move_cursor_line3(void) {
 	/* Set the DDRAM counter */
 	uint8_t lines = (m_N | m_NW);
 	if ((lines == DISPLAY_ONE_LINE) || (lines == DISPLAY_TWO_LINES)) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_ADDRESS;
 	} else if (lines == DISPLAY_THREE_LINES) {
 		m_AC = MIN_DDRAM_TRIPLE_LINE_LINE3;
@@ -872,13 +987,18 @@ status_t ssd_move_cursor_line3(void) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
-	return i2c_write(commands, 2, NULL, 0);
+	status_t ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -889,6 +1009,7 @@ status_t ssd_move_cursor_line4(void) {
 	if ((lines == DISPLAY_ONE_LINE) ||
 			(lines == DISPLAY_TWO_LINES) ||
 			(lines == DISPLAY_THREE_LINES)) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_ADDRESS;
 	} else if (lines == DISPLAY_FOUR_LINES) {
 		m_AC = MIN_DDRAM_QUADRUPLE_LINE_LINE4;
@@ -896,13 +1017,18 @@ status_t ssd_move_cursor_line4(void) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
-	return i2c_write(commands, 2, NULL, 0);
+	status_t ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -910,13 +1036,18 @@ status_t ssd_move_cursor_left(void) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_CURSOR_SHIFT | SHIFT_SCROLL_LEFT;
-	return i2c_write(commands, 2, NULL, 0);
+	status_t ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -924,13 +1055,18 @@ status_t ssd_move_cursor_right(void) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_CURSOR_SHIFT | SHIFT_SCROLL_RIGHT;
-	return i2c_write(commands, 2, NULL, 0);
+	status_t ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -940,36 +1076,46 @@ status_t ssd_move_cursor(uint8_t ddramAddress) {
 	uint8_t lines = (m_N | m_NW);
 	if (lines == DISPLAY_ONE_LINE) {
 		if (ddramAddress > MAX_DDRAM_SINGLE_LINE_LINE1) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 	} else if (lines == DISPLAY_TWO_LINES) {
 		if ((ddramAddress > MAX_DDRAM_DOUBLE_LINE_LINE1) &&
 				(ddramAddress < MIN_DDRAM_DOUBLE_LINE_LINE2)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		} else if (ddramAddress > MAX_DDRAM_DOUBLE_LINE_LINE2) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 	} else if (lines == DISPLAY_THREE_LINES) {
 		if ((ddramAddress > MAX_DDRAM_TRIPLE_LINE_LINE1) &&
 				(ddramAddress < MIN_DDRAM_TRIPLE_LINE_LINE2)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		} else if ((ddramAddress > MAX_DDRAM_TRIPLE_LINE_LINE2) &&
 				(ddramAddress < MIN_DDRAM_TRIPLE_LINE_LINE3)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		} else if (ddramAddress > MAX_DDRAM_TRIPLE_LINE_LINE3) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 	} else if (lines == DISPLAY_FOUR_LINES) {
 		if ((ddramAddress > MAX_DDRAM_QUADRUPLE_LINE_LINE1) &&
 				(ddramAddress < MIN_DDRAM_QUADRUPLE_LINE_LINE2)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		} else if ((ddramAddress > MAX_DDRAM_QUADRUPLE_LINE_LINE2) &&
 				(ddramAddress < MIN_DDRAM_QUADRUPLE_LINE_LINE3)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		} else if ((ddramAddress > MAX_DDRAM_QUADRUPLE_LINE_LINE3) &&
 				(ddramAddress < MIN_DDRAM_QUADRUPLE_LINE_LINE4)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		} else if (ddramAddress > MAX_DDRAM_QUADRUPLE_LINE_LINE4) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 	}
@@ -977,13 +1123,18 @@ status_t ssd_move_cursor(uint8_t ddramAddress) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
-	return i2c_write(commands, 2, NULL, 0);
+	status_t ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -994,6 +1145,7 @@ status_t ssd_create_symbol(
 	/* Set the CGRAM address */
 	uint8_t address;
 	if (symbolID > MAX_SYMBOL_ID) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	} else {
 		address = (uint8_t)(symbolID << SYMBOL_ID_SHIFT);
@@ -1002,6 +1154,7 @@ status_t ssd_create_symbol(
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -1011,12 +1164,17 @@ status_t ssd_create_symbol(
 	commands[2] = COMMAND_SET_CG_SEG_RAM_ADDRESS | address;
 	status_t ret = i2c_write(commands, 3, symbolData, SYMBOL_SIZE);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 
 	commands[0] = COMMAND_ENTRY_MODE_SET | m_ID | m_S;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
-	return i2c_write(commands, 2, NULL, 0);
+	ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -1024,21 +1182,30 @@ status_t ssd_write_symbol(uint8_t symbolID) {
 
 	/* Validate the symbol */
 	if (symbolID > MAX_SYMBOL_ID) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	} else if (!m_Symbols[symbolID]) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	status_t ret = i2c_write(NULL, 0, &symbolID, 1);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
-	return ssd_get_address_counter(&m_AC);
+
+	ret = ssd_get_address_counter(&m_AC);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -1047,19 +1214,27 @@ status_t ssd_write_text(char *text) {
 	/* Validate the text to be written */
 	size_t length = strlen(text);
 	if (length > DDRAM_SIZE) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	status_t ret = i2c_write(NULL, 0, (uint8_t *)text, (uint8_t)length);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
-	return ssd_get_address_counter(&m_AC);
+
+	ret = ssd_get_address_counter(&m_AC);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -1070,24 +1245,29 @@ status_t ssd_shift_display(
 
 	/* Verify the shift amount */
 	if (shiftAmount == 0) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 	
 	/* Verify the shift direction */
 	if ((shiftDirection != SHIFT_SCROLL_LEFT) &&
 			(shiftDirection != SHIFT_SCROLL_RIGHT)) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
 	/* Verify that a shift can occur */
 	if (m_DHd == DOT_SCROLL_ENABLED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_MODE;
 	} else if (m_DHSx == SHIFT_SCROLL_ALL_LINES_DISABLED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_MODE;
 	}
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -1095,18 +1275,24 @@ status_t ssd_shift_display(
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	status_t ret = i2c_write(commands, 1, NULL, 0);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 	if (shiftSpeed == SHIFT_SCROLL_IMMEDIATE) {
 		for (uint8_t i = 0; i < shiftAmount; i++) {
 			commands[i] = COMMAND_DISPLAY_SHIFT | shiftDirection;
 		}
-		return i2c_write(commands, shiftAmount, NULL, 0);
+		ret = i2c_write(commands, shiftAmount, NULL, 0);
+		if (ret != STATUS_OK) {
+			LOG_TO_STDERR();
+		}
+		return ret;
 	} else {
 		for (uint8_t i = 0; i < shiftAmount; i++) {
 			commands[0] = COMMAND_DISPLAY_SHIFT | shiftDirection;
 			ret = i2c_write(commands, 1, NULL, 0);
 			if (ret != STATUS_OK) {
+				LOG_TO_STDERR();
 				return ret;
 			}
 			pigpio_sleep(shiftSpeed);
@@ -1125,27 +1311,33 @@ status_t ssd_scroll_display(
 	/* Verify scroll direction */
 	if ((scrollDirection != SHIFT_SCROLL_LEFT) &&
 			(scrollDirection != SHIFT_SCROLL_RIGHT)) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
 	/* Verify scroll amount */
 	if ((scrollDirection == SHIFT_SCROLL_LEFT) &&
 			(scrollAmount + m_SQx > MAX_SCROLL)) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	} else if ((scrollDirection == SHIFT_SCROLL_RIGHT) &&
 			((uint16_t)m_SQx - scrollAmount < MIN_SCROLL)) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
 	/* Verify that a shift can occur */
 	if (m_DHd == DISPLAY_SHIFT_ENABLED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_MODE;
 	} else if (m_DHSx == SHIFT_SCROLL_ALL_LINES_DISABLED) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_MODE;
 	}
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -1165,12 +1357,17 @@ status_t ssd_scroll_display(
 		commands[0] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
 		commands[1] = COMMAND_SET_SCROLL_QUANTITY | m_SQx;
 		commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-		return i2c_write(commands, 3, NULL, 0);
+		status_t ret = i2c_write(commands, 3, NULL, 0);
+		if (ret != STATUS_OK) {
+			LOG_TO_STDERR();
+		}
+		return ret;
 	}
 
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
 	status_t ret = i2c_write(commands, 1, NULL, 0);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 
@@ -1183,13 +1380,18 @@ status_t ssd_scroll_display(
 		commands[0] = COMMAND_SET_SCROLL_QUANTITY | m_SQx;
 		status_t ret = i2c_write(commands, 1, NULL, 0);
 		if (ret != STATUS_OK) {
+			LOG_TO_STDERR();
 			return ret;
 		}
 		pigpio_sleep(scrollSpeed);
 	}
 
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	return i2c_write(commands, 1, NULL, 0);
+	ret = i2c_write(commands, 1, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -1197,12 +1399,14 @@ status_t ssd_get_busy_flag(uint8_t *busyFlag) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	uint8_t data[2];
 	status_t ret = i2c_read(READ_AC_ID, data, LENGTH_AC_ID);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 	*busyFlag = data[1] & BF_MASK;
@@ -1214,12 +1418,14 @@ status_t ssd_get_address_counter(uint8_t *currentAddress) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	uint8_t data[2];
 	status_t ret = i2c_read(READ_AC_ID, data, LENGTH_AC_ID);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 	*currentAddress = data[0] & AC_MASK;
@@ -1231,12 +1437,14 @@ status_t ssd_get_part_id(uint8_t *partID) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	uint8_t data[2];
 	status_t ret = i2c_read(READ_AC_ID, data, LENGTH_AC_ID);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 	*partID = data[1] & ID_MASK;
@@ -1255,47 +1463,59 @@ status_t ssd_read_from_DDRAM(
 		// Do not update the address counter
 	} else if (lines == DISPLAY_ONE_LINE) {
 		if (address > MAX_DDRAM_SINGLE_LINE_LINE1) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 	} else if (lines == DISPLAY_TWO_LINES) {
 		if ((address > MAX_DDRAM_DOUBLE_LINE_LINE1) &&
 				(address < MIN_DDRAM_DOUBLE_LINE_LINE2)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		} else if (address > MAX_DDRAM_DOUBLE_LINE_LINE2) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 	} else if (lines == DISPLAY_THREE_LINES) {
 		if ((address > MAX_DDRAM_TRIPLE_LINE_LINE1) &&
 				(address < MIN_DDRAM_TRIPLE_LINE_LINE2)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		} else if ((address > MAX_DDRAM_TRIPLE_LINE_LINE2) &&
 				(address < MIN_DDRAM_TRIPLE_LINE_LINE3)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		} else if (address > MAX_DDRAM_TRIPLE_LINE_LINE3) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 	} else if (lines == DISPLAY_FOUR_LINES) {
 		if ((address > MAX_DDRAM_QUADRUPLE_LINE_LINE1) &&
 				(address < MIN_DDRAM_QUADRUPLE_LINE_LINE2)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		} else if ((address > MAX_DDRAM_QUADRUPLE_LINE_LINE2) &&
 				(address < MIN_DDRAM_QUADRUPLE_LINE_LINE3)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		} else if ((address > MAX_DDRAM_QUADRUPLE_LINE_LINE3) &&
 				(address < MIN_DDRAM_QUADRUPLE_LINE_LINE4)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		} else if (address > MAX_DDRAM_QUADRUPLE_LINE_LINE4) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 	}
 
 	/* Validate the data length */
 	if ((dataLength == MIN_DDRAM) || (dataLength > DDRAM_SIZE)) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -1304,17 +1524,23 @@ status_t ssd_read_from_DDRAM(
 	commands[0] = COMMAND_SET_DDRAM_ADDRESS | address;
 	status_t ret = i2c_write(commands, 1, NULL, 0);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 
 	ret = i2c_read(READ_RAM, dataTemp, (uint8_t)(dataLength + 1));
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 
 	memcpy(data, dataTemp + 1, dataLength);
 	commands[0] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
-	return i2c_write(commands, 1, NULL, 0);
+	ret = i2c_write(commands, 1, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -1325,16 +1551,19 @@ status_t ssd_read_from_CGRAM(
 	
 	/* Validate address */
 	if (address > MAX_CGRAM) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
 	/* Validate data length */
 	if ((dataLength == MIN_CGRAM) || (dataLength > CGRAM_SIZE)) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -1344,17 +1573,23 @@ status_t ssd_read_from_CGRAM(
 	commands[1] = COMMAND_SET_CG_SEG_RAM_ADDRESS | address;
 	status_t ret = i2c_write(commands, 2, NULL, 0);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 
 	ret = i2c_read(READ_RAM, dataTemp, (uint8_t)(dataLength + 1));
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 
 	memcpy(data, dataTemp, dataLength);
 	commands[0] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
-	return i2c_write(commands, 1, NULL, 0);
+	ret = i2c_write(commands, 1, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -1365,16 +1600,19 @@ status_t ssd_read_from_SEGRAM(
 	
 	/* Validate address */
 	if (address > MAX_SEGRAM) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
 	/* Validate data length */
 	if ((dataLength == MIN_SEGRAM) || (dataLength > SEGRAM_SIZE)) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
@@ -1384,18 +1622,24 @@ status_t ssd_read_from_SEGRAM(
 	commands[1] = COMMAND_SET_CG_SEG_RAM_ADDRESS | address;
 	status_t ret = i2c_write(commands, 2, NULL, 0);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 
 	ret = i2c_read(READ_RAM, dataTemp, (uint8_t)(dataLength + 1));
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 
 	memcpy(data, dataTemp, dataLength);
 	commands[0] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
 	commands[1] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	return i2c_write(commands, 2, NULL, 0);
+	ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -1403,9 +1647,14 @@ status_t ssd_write_command_raw(uint8_t command) {
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
-	return i2c_write(&command, 1, NULL, 0);
+	status_t ret = i2c_write(&command, 1, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }

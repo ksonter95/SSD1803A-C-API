@@ -21,6 +21,14 @@ extern "C" {
 #include <stdint.h>
 
 /* === Defines ============================================================== */
+#define SSD_DEBUG
+#ifdef SSD_DEBUG
+#define LOG_TO_STDERR()	\
+		fprintf(stderr, "%s:%d - %s()\n", __FILE__, __LINE__, __func__)
+#else
+#define LOG_TO_STDERR()
+#endif // SSD_DEBUG
+
 /* I2C bus */
 #define I2C_BUS_0                       0
 #define I2C_BUS_1                       1

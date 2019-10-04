@@ -17,7 +17,9 @@
 #include "ssd_i2c.h"
 
 #include <pigpio.h>
+#include <stdio.h>
 
+#include "ssd1803a.h"
 #include "ssd_pigpio.h"
 
 /* === Defines ============================================================== */
@@ -74,23 +76,26 @@ status_t i2c_init(
 
 	/* pigpio library is not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	/* Interface to MPU has already been opened */
 	if (m_I2cHandle != STATUS_INVALID_HANDLE) {
+		LOG_TO_STDERR();
 		return STATUS_ALREADY_OPEN;
 	}
 
 	/* Open the I2C interface */
 	status_t ret = i2cOpen(bus, ADDRESS_BASE | sa0, I2C_FLAGS);
 
-	/* Failed to open the I2C interface */
+	/* Opened the I2C interface */
 	if (ret >= STATUS_OK) {
 		m_I2cHandle = (int16_t)ret;
 		ret = STATUS_OK;
+	} else {
+		LOG_TO_STDERR();
 	}
-
 	return ret;
 
 }
@@ -110,11 +115,15 @@ status_t i2c_deinit(void) {
 
 	/* I2C interface has not yet been opened */
 	if (m_I2cHandle == STATUS_INVALID_HANDLE) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_HANDLE;
 	}
 	
 	ret = i2cClose((uint16_t)m_I2cHandle);
 	m_I2cHandle = STATUS_INVALID_HANDLE;
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
 	return ret;
 
 }
@@ -189,6 +198,7 @@ status_t i2c_write(
 
 	/* I2C interface has not yet been opened */
 	if (m_I2cHandle == STATUS_INVALID_HANDLE) {
+		LOG_TO_STDERR();
 		return STATUS_INVALID_HANDLE;
 	}
 
@@ -214,11 +224,15 @@ status_t i2c_write(
 	}
 
 	/* Transmit the message to the MPU */
-	return (status_t) i2cWriteDevice(
+	status_t ret = (status_t) i2cWriteDevice(
 			(uint16_t)m_I2cHandle,
 			(char *)message,
 			length
 	);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -307,6 +321,7 @@ status_t i2c_read(
 			readRam ? CONTROL_BYTE_DATA : CONTROL_BYTE_COMMAND_LAST
 	);
 	if (ret < STATUS_OK) {
+		LOG_TO_STDERR();
 		return (status_t)ret;
 	}
 
@@ -316,6 +331,9 @@ status_t i2c_read(
 			(char *)data,
 			dataLen
 	);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
 	return (ret < STATUS_OK) ? (status_t)ret : STATUS_OK;
 
 }

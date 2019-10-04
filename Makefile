@@ -1,7 +1,7 @@
 # C compiler/linker and compiler flags #
 CC := gcc
 AR := ar
-CFLAGS := -Wall -Wconversion -Wextra -Wfatal-errors -Wpedantic -fPIC -g
+CFLAGS := -std=c11 -Wall -Wconversion -Wextra -Wfatal-errors -Wpedantic -fPIC -g
 ARFLAGS := -crs
 LDFLAGS := -shared
 

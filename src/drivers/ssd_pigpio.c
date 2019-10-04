@@ -18,6 +18,7 @@
 
 #include <pigpio.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 /* === Defines ============================================================== */
 
@@ -50,6 +51,7 @@ status_t pigpio_init(void) {
 
 	if (gpioInitialise() < STATUS_OK) {
 		m_PigpioInitialised = false;
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	} else {
 		m_PigpioInitialised = true;
@@ -99,6 +101,7 @@ status_t pigpio_sleep(double seconds) {
 
 	/* pigpio library not initialised */
 	if (!m_PigpioInitialised) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 

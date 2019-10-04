@@ -18,6 +18,7 @@
 
 #include <pigpio.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "ssd_pigpio.h"
 
@@ -75,19 +76,25 @@ status_t gpio_init(
 
 	/* pigpio library is not initialised */
 	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	/* Initialise the SSD1803A enable pin on the RPi */
 	status_t ret = gpioSetMode(pin, PI_OUTPUT);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
 	m_Pin = pin;
 
 	/* Hold the SSD1803A enable pin in the reset position */
 	m_ActiveLevel = activeLevel;
-	return gpioWrite((uint32_t)m_Pin, !m_ActiveLevel);
+	ret = gpioWrite((uint32_t)m_Pin, !m_ActiveLevel);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -116,15 +123,21 @@ status_t gpio_deinit(void) {
 
 	/* GPIO has not been previously initialised */
 	if (m_Pin == STATUS_INVALID_GPIO) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	/* Deinitialise the SSD1803A enable pin on the RPi */
 	status_t ret = gpioSetMode((uint8_t)m_Pin, PI_INPUT);
 	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
 		return ret;
 	}
-	return gpioSetPullUpDown((uint32_t)m_Pin, !m_ActiveLevel);
+	ret = gpioSetPullUpDown((uint32_t)m_Pin, !m_ActiveLevel);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -151,11 +164,16 @@ status_t gpio_enable_display(void) {
 
 	/* GPIO has not been previously initialised */
 	if (m_Pin == STATUS_INVALID_GPIO) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	/* Enable the SSD1803A */
-	return gpioWrite((uint32_t)m_Pin, m_ActiveLevel);
+	status_t ret = gpioWrite((uint32_t)m_Pin, m_ActiveLevel);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
 
@@ -182,10 +200,15 @@ status_t gpio_disable_display(void) {
 
 	/* GPIO has not been previously initialised */
 	if (m_Pin == STATUS_INVALID_GPIO) {
+		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
 	/* Enable the SSD1803A */
-	return gpioWrite((uint32_t)m_Pin, !m_ActiveLevel);
+	status_t ret = gpioWrite((uint32_t)m_Pin, !m_ActiveLevel);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+	}
+	return ret;
 
 }
