@@ -357,8 +357,8 @@ status_t ssd_deinit(void) {
 	/* Disable/deinitialise the I2C, GPIO and pigpio library */
 	i2c_deinit();
 	gpio_disable_display();
-	gpio_deinit();
-	//pigpio_deinit();
+	//gpio_deinit(); // TODO: REMOVE COMMENTS
+	pigpio_deinit();
 	return STATUS_OK;
 
 }
