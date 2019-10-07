@@ -1350,7 +1350,11 @@ status_t ssd_scroll_display(
 		commands[0] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
 		commands[1] = COMMAND_SET_SCROLL_QUANTITY | m_SQx;
 		commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-		return i2c_write(commands, 3, NULL, 0);
+		status_t ret = i2c_write(commands, 3, NULL, 0);
+		if (ret != STATUS_OK) {
+			LOG_TO_STDERR();
+		}
+		return ret;
 	} else if (scrollSpeed == SHIFT_SCROLL_IMMEDIATE) {
 		if (scrollDirection == SHIFT_SCROLL_LEFT) {
 			m_SQx = (uint8_t)(m_SQx + scrollAmount);
@@ -1376,9 +1380,9 @@ status_t ssd_scroll_display(
 
 	for (uint8_t i = 0; i < scrollAmount; i++) {
 		if (scrollDirection == SHIFT_SCROLL_LEFT) {
-			m_SQx = (uint8_t)(m_SQx + scrollAmount);
+			m_SQx = (uint8_t)(m_SQx + 1);
 		} else {
-			m_SQx = (uint8_t)(m_SQx + scrollAmount);
+			m_SQx = (uint8_t)(m_SQx - 1);
 		}
 		commands[0] = COMMAND_SET_SCROLL_QUANTITY | m_SQx;
 		status_t ret = i2c_write(commands, 1, NULL, 0);
