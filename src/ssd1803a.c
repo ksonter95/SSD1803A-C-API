@@ -695,7 +695,7 @@ status_t ssd_set_font(
 			(fontHeight == SINGLE_DOUBLE_SINGLE) ||
 			(fontHeight == DOUBLE_DOUBLE) ||
 			(fontHeight == DOUBLE_SINGLE_SINGLE)) {
-		m_DH = fontHeight & DH_MASK;
+		m_DH = (fontHeight & DH_MASK) << DH_SHIFT;
 		m_UDx = fontHeight & UD_MASK;
 	} else if (fontHeight != UNCHANGED) {
 		LOG_TO_STDERR();
