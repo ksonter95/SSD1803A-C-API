@@ -336,7 +336,8 @@ status_t ssd_init(
 
 	/* Reset the RE and IS to default state */
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	ret = i2c_write(commands, 1, NULL, 0);
+	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
+	ret = i2c_write(commands, 2, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		i2c_deinit();
