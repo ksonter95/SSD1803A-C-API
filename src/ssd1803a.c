@@ -300,7 +300,7 @@ status_t ssd_init(
 	commands[6] = COMMAND_CONTRAST_SET | m_Cl;
 	commands[7] = COMMAND_POWER_ICON_CONTRAST | m_Ion | m_Bon | m_Ch;
 	commands[8] = COMMAND_FOLLOWER_CONTROL | m_Don | m_Rabx;
-	commands[9] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
+	commands[9] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
 	ret = i2c_write(commands, 10, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
