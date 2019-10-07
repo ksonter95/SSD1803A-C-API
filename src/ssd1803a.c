@@ -1089,21 +1089,25 @@ status_t ssd_move_cursor(
 	uint8_t lines = (m_N | m_NW);
 	if (lines == DISPLAY_ONE_LINE) {
 		if ((line > LINE1) || (position > MAX_POSITION_1LINE)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 		m_AC = position;
 	} else if (lines == DISPLAY_TWO_LINES) {
 		if ((line > LINE2) || (position > MAX_POSITION_2LINES)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 		m_AC = (uint8_t)(0x40 * line + position % 0x28);
 	} else if (lines == DISPLAY_THREE_LINES) {
 		if ((line > LINE3) || (position > MAX_POSITION_3LINES)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 		m_AC = (uint8_t)(0x20 * line + position % 0x14);
 	} else if (lines == DISPLAY_FOUR_LINES) {
 		if ((line > LINE4) || (position > MAX_POSITION_4LINES)) {
+			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 		m_AC = (uint8_t)(0x20 * line + position % 0x14);
