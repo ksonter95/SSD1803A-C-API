@@ -1590,7 +1590,7 @@ status_t ssd_read_from_CGRAM(
 		return ret;
 	}
 
-	memcpy(data, dataTemp, dataLength);
+	memcpy(data, dataTemp + 1, dataLength);
 	commands[0] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
 	ret = i2c_write(commands, 1, NULL, 0);
 	if (ret != STATUS_OK) {
@@ -1639,7 +1639,7 @@ status_t ssd_read_from_SEGRAM(
 		return ret;
 	}
 
-	memcpy(data, dataTemp, dataLength);
+	memcpy(data, dataTemp + 1, dataLength);
 	commands[0] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
 	commands[1] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	ret = i2c_write(commands, 2, NULL, 0);
