@@ -145,6 +145,7 @@ uint8_t m_ID	= NORMAL_WRITE_DIRECTION;			// I/D = 1
 uint8_t m_BDS	= NORMAL_HORIZONTAL_DIRECTION;		// BDS = 1
 uint8_t m_BDC	= NORMAL_VERTICAL_DIRECTION;		// BDC = 0
 
+uint8_t m_BTemp	= CURSOR_BLINK_DISABLED;			// Cache of B
 uint8_t m_B		= CURSOR_BLINK_DISABLED;			// B = 0
 uint8_t m_C		= CURSOR_DISABLED;					// C = 0
 uint8_t m_D		= DISPLAY_DISABLED;					// D = 0
@@ -580,7 +581,7 @@ status_t ssd_cursor_configure(
 	/* Set the cursor blink mode */
 	if ((cursorBlink == CURSOR_BLINK_DISABLED) ||
 			(cursorBlink == CURSOR_BLINK_ENABLED)) {
-		m_B = cursorBlink;
+		m_BTemp = cursorBlink;
 	} else if (cursorBlink != UNCHANGED) {
 		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
@@ -639,6 +640,7 @@ status_t ssd_cursor_enable(void) {
 
 	/* Set the cursor state */
 	m_C = CURSOR_ENABLED;
+	m_B = m_BTemp;
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
