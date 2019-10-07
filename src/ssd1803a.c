@@ -109,6 +109,15 @@
 #define MIN_SCROLL						(0x00)
 #define MAX_SCROLL						(0x30)
 
+#define MIN_LINE						(0x00)
+#define MAX_LINE						(0x03)
+
+#define MIN_POSITION					(0x00)
+#define MAX_POSITION_1LINE				(0x4F)
+#define MAX_POSITION_2LINES				(0x27)
+#define MAX_POSITION_3LINES				(0x13)
+#define MAX_POSITION_4LINES				(0x13)
+
 #define COMMAND_CLEAR_DISPLAY			(0x01)
 #define COMMAND_RETURN_HOME				(0x02)
 #define COMMAND_POWER_DOWN_MODE			(0x02)
@@ -1073,57 +1082,33 @@ status_t ssd_move_cursor_right(void) {
 
 }
 
-status_t ssd_move_cursor(uint8_t ddramAddress) {
-
-	/* Set the DDRAM counter */
+status_t ssd_move_cursor(
+		uint8_t line,
+		uint8_t position) {
+	
 	uint8_t lines = (m_N | m_NW);
 	if (lines == DISPLAY_ONE_LINE) {
-		if (ddramAddress > MAX_DDRAM_SINGLE_LINE_LINE1) {
-			LOG_TO_STDERR();
+		if ((line > LINE1) || (position > MAX_POSITION_1LINE)) {
 			return STATUS_INVALID_PARAM;
 		}
+		m_AC = position;
 	} else if (lines == DISPLAY_TWO_LINES) {
-		if ((ddramAddress > MAX_DDRAM_DOUBLE_LINE_LINE1) &&
-				(ddramAddress < MIN_DDRAM_DOUBLE_LINE_LINE2)) {
-			LOG_TO_STDERR();
-			return STATUS_INVALID_PARAM;
-		} else if (ddramAddress > MAX_DDRAM_DOUBLE_LINE_LINE2) {
-			LOG_TO_STDERR();
+		if ((line > LINE2) || (position > MAX_POSITION_2LINES)) {
 			return STATUS_INVALID_PARAM;
 		}
+		m_AC = (uint8_t)(0x40 * line + position % 0x28);
 	} else if (lines == DISPLAY_THREE_LINES) {
-		if ((ddramAddress > MAX_DDRAM_TRIPLE_LINE_LINE1) &&
-				(ddramAddress < MIN_DDRAM_TRIPLE_LINE_LINE2)) {
-			LOG_TO_STDERR();
-			return STATUS_INVALID_PARAM;
-		} else if ((ddramAddress > MAX_DDRAM_TRIPLE_LINE_LINE2) &&
-				(ddramAddress < MIN_DDRAM_TRIPLE_LINE_LINE3)) {
-			LOG_TO_STDERR();
-			return STATUS_INVALID_PARAM;
-		} else if (ddramAddress > MAX_DDRAM_TRIPLE_LINE_LINE3) {
-			LOG_TO_STDERR();
+		if ((line > LINE3) || (position > MAX_POSITION_3LINES)) {
 			return STATUS_INVALID_PARAM;
 		}
+		m_AC = (uint8_t)(0x20 * line + position % 0x14);
 	} else if (lines == DISPLAY_FOUR_LINES) {
-		if ((ddramAddress > MAX_DDRAM_QUADRUPLE_LINE_LINE1) &&
-				(ddramAddress < MIN_DDRAM_QUADRUPLE_LINE_LINE2)) {
-			LOG_TO_STDERR();
-			return STATUS_INVALID_PARAM;
-		} else if ((ddramAddress > MAX_DDRAM_QUADRUPLE_LINE_LINE2) &&
-				(ddramAddress < MIN_DDRAM_QUADRUPLE_LINE_LINE3)) {
-			LOG_TO_STDERR();
-			return STATUS_INVALID_PARAM;
-		} else if ((ddramAddress > MAX_DDRAM_QUADRUPLE_LINE_LINE3) &&
-				(ddramAddress < MIN_DDRAM_QUADRUPLE_LINE_LINE4)) {
-			LOG_TO_STDERR();
-			return STATUS_INVALID_PARAM;
-		} else if (ddramAddress > MAX_DDRAM_QUADRUPLE_LINE_LINE4) {
-			LOG_TO_STDERR();
+		if ((line > LINE4) || (position > MAX_POSITION_4LINES)) {
 			return STATUS_INVALID_PARAM;
 		}
+		m_AC = (uint8_t)(0x20 * line + position % 0x14);
 	}
-	m_AC = ddramAddress;
-
+	
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
 		LOG_TO_STDERR();
