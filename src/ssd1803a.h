@@ -776,7 +776,13 @@ status_t ssd_display_disable(uint8_t lowPowerMode);
  * 		- CURSOR_STATIONARY: After a character or symbol is written to the
  * 				SSD1803A LCD, then instead of the cursor shifting to the next
  * 				position, the display will instead shift.  This gives the
- * 				appearance of a stationary cursor.
+ * 				appearance of a stationary cursor.  Note, if display shift is
+ * 				enabled (shiftOrScroll = DISPLAY_SHIFT_ENABLED in
+ * 				ssd_display_configure()) then only the lines enabled (by the
+ * 				parameter shiftOrScrollLinesEnabled in ssd_display_configure())
+ * 				will have a stationary cursor.  Also note, all of the enabled
+ * 				lineswill shift after a character is written, not just the line
+ * 				on which the character is written.
  * 		- CURSOR_MOVING: After a character or symbol is written to the SSD1803A
  * 				LCD, then the cursor will shift to the next position.
  * 		- UNCHANGED: The last cursor movement configuration will be used to set
