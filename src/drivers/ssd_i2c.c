@@ -10,7 +10,16 @@
  * Copyright (c) 2019, Kieran Sonter
  * ==========================================================================\n
  * Description: \n
- * TODO: Enter description.
+ * This driver is only used internally within the SSD1803A library and it
+ * provides an interface to any I2C pigpio functions formatted to be understood
+ * by the SSD1803A display MPU.  As such, it provides the following functions:
+ * 		- i2c_init(): Initialises the I2C hardware drivers.
+ * 		- i2c_deinit(): Deinitialises the I2C hardware drivers.
+ * 		- i2c_write(): Conducts an I2C write operation.
+ * 		- i2c_read(): Conducts an I2C read operation.
+ * 
+ * For any further information on these functions, see the function comments
+ * shown below.
  * ========================================================================== */
 
 /* === Includes ============================================================= */

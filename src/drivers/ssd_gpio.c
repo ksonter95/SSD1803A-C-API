@@ -10,7 +10,16 @@
  * Copyright (c) 2019, Kieran Sonter
  * ==========================================================================\n
  * Description: \n
- * TODO: Enter description.
+ * This driver is only used internally within the SSD1803A library and it
+ * provides an interface to any GPIO pigpio functions.  As such, it provides
+ * the following functions:
+ * 		- gpio_init(): Initialises the GPIO hardware drivers.
+ * 		- gpio_deinit(): Deinitialises the GPIO hardware drivers.
+ * 		- gpio_enable_display(): Enables the hardware of the SSD1803A.
+ * 		- gpio_disable_display(): Disables the hardware of the SSD1803A.
+ * 
+ * For any further information on these functions, see the function comments
+ * shown below.
  * ========================================================================== */
 
 /* === Includes ============================================================= */
@@ -23,7 +32,6 @@
 #include "ssd_pigpio.h"
 
 /* === Defines ============================================================== */
-
 
 /* === Enumerations ========================================================= */
 

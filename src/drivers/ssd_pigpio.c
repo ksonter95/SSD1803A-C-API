@@ -10,7 +10,18 @@
  * Copyright (c) 2019, Kieran Sonter
  * ==========================================================================\n
  * Description: \n
- * TODO: Enter description.
+ * This driver is only used internally within the SSD1803A library and it
+ * provides an interface to any generic pigpio functions.  As such, it provides
+ * the following functions:
+ * 		- pigpio_init(): Initialises the pigpio library.
+ * 		- pigpio_deinit(): Deinitialises the pigpio library.
+ * 		- pigpio_is_initialised(): Returns whether or not the pipgio has
+ * 				previously been initialised.
+ * 		- pigpio_sleep(): Pauses programme execution for the prescribed amount
+ * 				of time.
+ * 
+ * For any further information on these functions, see the function comments
+ * shown below.
  * ========================================================================== */
 
 /* === Includes ============================================================= */

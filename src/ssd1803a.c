@@ -8,9 +8,6 @@
  * System:		Raspberry Pi
  * Created:		13/09/2019 16:45:36 PM ksonter \n
  * Copyright (c) 2019, Kieran Sonter
- * ==========================================================================\n
- * Description: \n
- * TODO: Enter description.
  * ========================================================================== */
 
 /* === Includes ============================================================= */
@@ -24,74 +21,71 @@
 #include "ssd_pigpio.h"
 
 /* === Defines ============================================================== */
-#define NW_MASK							(0x01)
-#define N_MASK							(0x08)
+/* Bit masks */
+#define NW_MASK							(0x01)		// Number of lines
+#define N_MASK							(0x08)		// Number of lines
 
-#define UD_MASK							(0x0C)
-#define DH_MASK							(0x01)
+#define BS1_MASK						(0x02)		// Internal bias
+#define BS0_MASK						(0x08)		// Internal bias
 
-#define BS0_MASK						(0x08)
-#define BS1_MASK						(0x02)
+#define UD_MASK							(0x0C)		// Double height control
+#define DH_MASK							(0x01)		// Double height control
 
-#define CH_MASK							(0x03)
-#define CL_MASK							(0x0F)
+#define CH_MASK							(0x03)		// Display contrast
+#define CL_MASK							(0x0F)		// Display contrast
 
-#define BF_MASK							(0x80)
-#define AC_MASK							(0x7F)
-#define ID_MASK							(0x7F)
+#define BF_MASK							(0x80)		// Busy flag
+#define AC_MASK							(0x7F)		// Address counter
+#define ID_MASK							(0x7F)		// Part ID
 
-#define DH_SHIFT						(0x02)
-#define CH_SHIFT						(0x04)
-#define SYMBOL_ID_SHIFT					(0x03)
+/* Bit shifts */
+#define DH_SHIFT						(0x02)		// Double height enable
+#define CH_SHIFT						(0x04)		// Display contrast
+#define SYMBOL_ID_SHIFT					(0x03)		// CGRAM address
 
+/* Command bits */
 #define IS_0							(0x00)		// IS = 0
 #define IS_1							(0x01)		// IS = 1
 
 #define RE_0							(0x00)		// RE = 0
 #define RE_1							(0x02)		// RE = 1
 
-#define DH_0							(0x00)		// DH = 0
-#define DH_1							(0x04)		// DH = 1
-
 #define CH_0							(0x00)		// C5-4 = 00
 #define CL_0							(0x00)		// C3-0 = 0000
 
 #define RAB_0							(0x00)		// Rab2-0 = 000
 
+/* RAM size */
 #define DDRAM_SIZE						(0x50)
 #define CGRAM_SIZE						(0x40)
 #define SEGRAM_SIZE						(0x10)
 
 #define SYMBOL_SIZE						(0x08)
-#define MAX_SYMBOLS						(0x08)
 
-#define MIN_SYMBOL_ID					(0x00)
-#define MAX_SYMBOL_ID					(0x07)
+/* Maximum/minimums */
+#define MAX_BLINK_FREQUENCY				(0x07)
 
-#define MIN_CGRAM						(0x00)
-#define MAX_CGRAM						(0x3F)
+#define MAX_SHIFT_SCROLL_LINES			(0x0F)
 
-#define MIN_SEGRAM						(0x00)
-#define MAX_SEGRAM						(0x0F)
+#define MIN_POSITION					(0x00)
+#define MAX_POSITION_1LINE				(0x4F)
+#define MAX_POSITION_2LINES				(0x27)
+#define MAX_POSITION_3LINES				(0x13)
+#define MAX_POSITION_4LINES				(0x13)
 
 #define MIN_DDRAM						(0x00)
-
-#define MIN_DDRAM_SINGLE_LINE_LINE1		(0x00)
 #define MAX_DDRAM_SINGLE_LINE_LINE1		(0x4F)
 
-#define MIN_DDRAM_DOUBLE_LINE_LINE1		(0x00)
 #define MAX_DDRAM_DOUBLE_LINE_LINE1		(0x27)
 #define MIN_DDRAM_DOUBLE_LINE_LINE2		(0x40)
 #define MAX_DDRAM_DOUBLE_LINE_LINE2		(0x67)
 
-#define MIN_DDRAM_TRIPLE_LINE_LINE1		(0x00)
 #define MAX_DDRAM_TRIPLE_LINE_LINE1		(0x13)
 #define MIN_DDRAM_TRIPLE_LINE_LINE2		(0x20)
 #define MAX_DDRAM_TRIPLE_LINE_LINE2		(0x33)
 #define MIN_DDRAM_TRIPLE_LINE_LINE3		(0x40)
 #define MAX_DDRAM_TRIPLE_LINE_LINE3		(0x53)
 
-#define MIN_DDRAM_QUADRUPLE_LINE_LINE1	(0x00)
 #define MAX_DDRAM_QUADRUPLE_LINE_LINE1	(0x13)
 #define MIN_DDRAM_QUADRUPLE_LINE_LINE2	(0x20)
 #define MAX_DDRAM_QUADRUPLE_LINE_LINE2	(0x33)
@@ -99,6 +93,15 @@
 #define MAX_DDRAM_QUADRUPLE_LINE_LINE3	(0x53)
 #define MIN_DDRAM_QUADRUPLE_LINE_LINE4	(0x60)
 #define MAX_DDRAM_QUADRUPLE_LINE_LINE4	(0x73)
+
+#define MAX_SYMBOLS						(0x08)
+#define MAX_SYMBOL_ID					(0x07)
+
+#define MIN_CGRAM						(0x00)
+#define MAX_CGRAM						(0x3F)
+
+#define MIN_SEGRAM						(0x00)
+#define MAX_SEGRAM						(0x0F)
 
 #define MIN_CONTRAST					(0x00)
 #define MAX_CONTRAST					(0x3F)
@@ -109,15 +112,7 @@
 #define MIN_SCROLL						(0x00)
 #define MAX_SCROLL						(0x30)
 
-#define MIN_LINE						(0x00)
-#define MAX_LINE						(0x03)
-
-#define MIN_POSITION					(0x00)
-#define MAX_POSITION_1LINE				(0x4F)
-#define MAX_POSITION_2LINES				(0x27)
-#define MAX_POSITION_3LINES				(0x13)
-#define MAX_POSITION_4LINES				(0x13)
-
+/* Instruction set */
 #define COMMAND_CLEAR_DISPLAY			(0x01)
 #define COMMAND_RETURN_HOME				(0x02)
 #define COMMAND_POWER_DOWN_MODE			(0x02)
@@ -174,7 +169,7 @@ uint8_t m_DHSx	= SHIFT_SCROLL_ALL_LINES_ENABLED;	// DS4-1 = HS4-1 = 1
 
 uint8_t m_IS	= IS_0;								// IS = 0
 uint8_t m_RE	= RE_0;								// RE = 0
-uint8_t m_DH	= DH_0;								// DH = 0
+uint8_t m_DH	= (DOUBLE_HEIGHT_DISABLED & DH_MASK) << DH_SHIFT;	// DH = 0
 uint8_t m_N		= DISPLAY_FOUR_LINES & N_MASK;		// N = 1
 uint8_t m_REV	= FONT_BLACK;						// REV = 0
 uint8_t m_BE	= BLINK_DISABLED;					// BE = 0
@@ -205,7 +200,7 @@ bool m_Symbols[MAX_SYMBOLS] = {0};
 /* ========================================================================== */
 
 /* ========================================================================== */
-/**@brief Initialises the SSD1803A display MPU
+/**@brief Initialises the SSD1803A display MPU.
  * ========================================================================== */
 status_t ssd_init(
 		uint8_t rpiResetPin,
@@ -248,7 +243,7 @@ status_t ssd_init(
 		return STATUS_INVALID_PARAM;
 	}
 
-	/* Check the temperature coefficient */
+	/* Set the temperature coefficient */
 	if ((temperatureCoefficient == NEG_0_05_PERCENT_PER_DEG_C) ||
 			(temperatureCoefficient == NEG_0_10_PERCENT_PER_DEG_C) ||
 			(temperatureCoefficient == NEG_0_15_PERCENT_PER_DEG_C)) {
@@ -343,7 +338,7 @@ status_t ssd_init(
 		return ret;
 	}
 
-	/* Reset the RE and IS to default state */
+	/* Reset the address counter to the current DDRAM location */
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
 	ret = i2c_write(commands, 2, NULL, 0);
@@ -357,6 +352,9 @@ status_t ssd_init(
 
 }
 
+/* ========================================================================== */
+/**@brief Deinitialises the SSD1803A display MPU.
+ * ========================================================================== */
 status_t ssd_deinit(void) {
 
 	/* pigpio library not initialised */
@@ -374,6 +372,9 @@ status_t ssd_deinit(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Configures the display related settings of the SSD1803A.
+ * ========================================================================== */
 status_t ssd_display_configure(
 		uint8_t writeDirection,
 		uint8_t numberOfLines,
@@ -422,7 +423,7 @@ status_t ssd_display_configure(
 	}
 
 	/* Set the lines where the shift/scroll is enabled */
-	if (shiftOrScrollLinesEnabled <= SHIFT_SCROLL_LINES_MAX) {
+	if (shiftOrScrollLinesEnabled <= MAX_SHIFT_SCROLL_LINES) {
 		m_DHSx = shiftOrScrollLinesEnabled;
 	} else if (shiftOrScrollLinesEnabled != UNCHANGED) {
 		LOG_TO_STDERR();
@@ -454,7 +455,7 @@ status_t ssd_display_configure(
 	}
 
 	/* Update the MPU display settings */
-	uint8_t commands[10];
+	uint8_t commands[9];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_ENTRY_MODE_SET | m_ID | m_S;
 	commands[2] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
@@ -464,8 +465,7 @@ status_t ssd_display_configure(
 	commands[6] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
 	commands[7] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
 	commands[8] = COMMAND_SHIFT_SCROLL_ENABLE | m_DHSx;
-	commands[9] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	status_t ret = i2c_write(commands, 10, NULL, 0);
+	status_t ret = i2c_write(commands, 9, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -473,22 +473,28 @@ status_t ssd_display_configure(
 
 }
 
+/* ========================================================================== */
+/**@brief Enables the display of the SSD1803A.
+ * ========================================================================== */
 status_t ssd_display_enable(void) {
 
 	/* Set the power down mode and display state */
 	m_PD = POWER_SAVING_MODE_DISABLED;
 	m_D = DISPLAY_ENABLED;
 
-	/* Leave sleep mode */
-	uint8_t commands[5];
-	commands[0] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
-	commands[1] = COMMAND_POWER_DOWN_MODE | m_PD;
-	commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	status_t ret = i2c_write(commands, 3, NULL, 0);
-	if (ret == STATUS_INVALID_HANDLE) {
+	/* pigpio library not initialised */
+	if (!pigpio_is_initialised()) {
 		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
-	} else if (ret != STATUS_OK) {
+	}
+
+	/* Leave sleep mode */
+	uint8_t commands[3];
+	commands[0] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
+	commands[1] = COMMAND_POWER_DOWN_MODE | m_PD;
+	commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
+	status_t ret = i2c_write(commands, 3, NULL, 0);
+	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
@@ -497,26 +503,18 @@ status_t ssd_display_enable(void) {
 	/* Turn the display on */
 	commands[0] = COMMAND_DISPLAY_ON_OFF_CONTROL | m_D | m_C | m_B;
 	ret = i2c_write(commands, 1, NULL, 0);
-	if (ret == STATUS_INVALID_HANDLE) {
-		LOG_TO_STDERR();
-		return STATUS_NOT_INITIALISED;
-	} else if (ret != STATUS_OK) {
+	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
 	pigpio_sleep(0.001);
 
 	/* Increase the contrast and gain */
-	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
-	commands[1] = COMMAND_CONTRAST_SET | m_Cl;
-	commands[2] = COMMAND_POWER_ICON_CONTRAST | m_Ion | m_Bon | m_Ch;
-	commands[3] = COMMAND_FOLLOWER_CONTROL | m_Don | m_Rabx;
-	commands[4] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	ret = i2c_write(commands, 5, NULL, 0);
-	if (ret == STATUS_INVALID_HANDLE) {
-		LOG_TO_STDERR();
-		return STATUS_NOT_INITIALISED;
-	} else if (ret != STATUS_OK) {
+	commands[0] = COMMAND_CONTRAST_SET | m_Cl;
+	commands[1] = COMMAND_POWER_ICON_CONTRAST | m_Ion | m_Bon | m_Ch;
+	commands[2] = COMMAND_FOLLOWER_CONTROL | m_Don | m_Rabx;
+	ret = i2c_write(commands, 3, NULL, 0);
+	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
 	pigpio_sleep(0.025);
@@ -524,29 +522,36 @@ status_t ssd_display_enable(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Disables the display of the SSD1803A.
+ * ========================================================================== */
 status_t ssd_display_disable(uint8_t lowPowerMode) {
 
 	/* Set the power down mode */
 	if ((lowPowerMode == POWER_SAVING_MODE_DISABLED) ||
 			(lowPowerMode == POWER_SAVING_MODE_ENABLED)) {
 		m_PD = lowPowerMode;
+	} else {
+		return STATUS_INVALID_PARAM;
 	}
 
 	/* Set the display state */
 	m_D = DISPLAY_DISABLED;
 
+	/* pigpio library not initialised */
+	if (!pigpio_is_initialised()) {
+		LOG_TO_STDERR();
+		return STATUS_NOT_INITIALISED;
+	}
+
 	/* Drop the contrast and gain */
-	uint8_t commands[5];
+	uint8_t commands[4];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
 	commands[1] = COMMAND_POWER_ICON_CONTRAST | m_Ion | m_Bon | CH_0;
 	commands[2] = COMMAND_CONTRAST_SET | CL_0;
 	commands[3] = COMMAND_FOLLOWER_CONTROL | m_Don | RAB_0;
-	commands[4] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	status_t ret = i2c_write(commands, 5, NULL, 0);
-	if (ret == STATUS_INVALID_HANDLE) {
-		LOG_TO_STDERR();
-		return STATUS_NOT_INITIALISED;
-	} else if (ret != STATUS_OK) {
+	status_t ret = i2c_write(commands, 4, NULL, 0);
+	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
@@ -555,10 +560,7 @@ status_t ssd_display_disable(uint8_t lowPowerMode) {
 	/* Turn the display off */
 	commands[0] = COMMAND_DISPLAY_ON_OFF_CONTROL | m_D | m_C | m_B;
 	ret = i2c_write(commands, 1, NULL, 0);
-	if (ret == STATUS_INVALID_HANDLE) {
-		LOG_TO_STDERR();
-		return STATUS_NOT_INITIALISED;
-	} else if (ret != STATUS_OK) {
+	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
@@ -567,12 +569,8 @@ status_t ssd_display_disable(uint8_t lowPowerMode) {
 	/* Enter sleep mode */
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
 	commands[1] = COMMAND_POWER_DOWN_MODE | m_PD;
-	commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	ret = i2c_write(commands, 3, NULL, 0);
-	if (ret == STATUS_INVALID_HANDLE) {
-		LOG_TO_STDERR();
-		return STATUS_NOT_INITIALISED;
-	} else if (ret != STATUS_OK) {
+	ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
@@ -582,6 +580,9 @@ status_t ssd_display_disable(uint8_t lowPowerMode) {
 
 }
 
+/* ========================================================================== */
+/**@brief Configures the cursor related settings of the SSD1803A.
+ * ========================================================================== */
 status_t ssd_cursor_configure(
 		uint8_t cursorBlink,
 		uint8_t cursorBlinkRate,
@@ -591,6 +592,9 @@ status_t ssd_cursor_configure(
 	/* Set the cursor blink mode */
 	if ((cursorBlink == CURSOR_BLINK_DISABLED) ||
 			(cursorBlink == CURSOR_BLINK_ENABLED)) {
+		if (m_C == CURSOR_ENABLED) {
+			m_B = cursorBlink;
+		}
 		m_BTemp = cursorBlink;
 	} else if (cursorBlink != UNCHANGED) {
 		LOG_TO_STDERR();
@@ -598,7 +602,7 @@ status_t ssd_cursor_configure(
 	}
 
 	/* Set the cursor blink rate */
-	if (cursorBlinkRate <= BLINK_FREQUENCY_MAX) {
+	if (cursorBlinkRate <= MAX_BLINK_FREQUENCY) {
 		m_Fx = cursorBlinkRate;
 	} else if (cursorBlinkRate != UNCHANGED) {
 		LOG_TO_STDERR();
@@ -630,15 +634,14 @@ status_t ssd_cursor_configure(
 	}
 
 	/* Update the MPU cursor settings */
-	uint8_t commands[7];
+	uint8_t commands[6];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
 	commands[1] = COMMAND_INTERNAL_OSC_FREQUENCY | m_BS0 | m_Fx;
-	commands[2] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
-	commands[3] = COMMAND_EXTENDED_FUNCTION_SET | m_FW | m_BW | m_NW;
-	commands[4] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	commands[5] = COMMAND_DISPLAY_ON_OFF_CONTROL | m_D | m_C | m_B;
-	commands[6] = COMMAND_ENTRY_MODE_SET | m_ID | m_S;
-	status_t ret = i2c_write(commands, 7, NULL, 0);
+	commands[2] = COMMAND_ENTRY_MODE_SET | m_ID | m_S;
+	commands[3] = COMMAND_DISPLAY_ON_OFF_CONTROL | m_D | m_C | m_B;
+	commands[4] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
+	commands[5] = COMMAND_EXTENDED_FUNCTION_SET | m_FW | m_BW | m_NW;
+	status_t ret = i2c_write(commands, 6, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -646,6 +649,9 @@ status_t ssd_cursor_configure(
 
 }
 
+/* ========================================================================== */
+/**@brief Enables the cursor of the SSD1803A.
+ * ========================================================================== */
 status_t ssd_cursor_enable(void) {
 
 	/* Set the cursor state */
@@ -670,9 +676,13 @@ status_t ssd_cursor_enable(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Disables the cursor of the SSD1803A.
+ * ========================================================================== */
 status_t ssd_cursor_disable(void) {
 
-	/* Set the cursor state */
+	/* Set the cursor state and blink */
+	m_B = CURSOR_BLINK_DISABLED;
 	m_C = CURSOR_DISABLED;
 
 	/* pigpio library not initialised */
@@ -681,7 +691,7 @@ status_t ssd_cursor_disable(void) {
 		return STATUS_NOT_INITIALISED;
 	}
 
-	/* Enable the cursor */
+	/* Disable the cursor */
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_DISPLAY_ON_OFF_CONTROL | m_D | m_C | m_B;
@@ -693,6 +703,9 @@ status_t ssd_cursor_disable(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Configures the font related settings of the SSD1803A.
+ * ========================================================================== */
 status_t ssd_set_font(
 		uint8_t fontHeight,
 		uint8_t fontWidth,
@@ -708,7 +721,7 @@ status_t ssd_set_font(
 		m_UDx = fontHeight & UD_MASK;
 	} else if (fontHeight != UNCHANGED) {
 		LOG_TO_STDERR();
-		return STATUS_NOT_INITIALISED;
+		return STATUS_INVALID_PARAM;
 	}
 
 	/* Set the font width */
@@ -717,7 +730,7 @@ status_t ssd_set_font(
 		m_FW = fontWidth;
 	} else if (fontWidth != UNCHANGED) {
 		LOG_TO_STDERR();
-		return STATUS_NOT_INITIALISED;
+		return STATUS_INVALID_PARAM;
 	}
 
 	/* Set the font colour */
@@ -725,7 +738,7 @@ status_t ssd_set_font(
 		m_REV = fontColour;
 	} else if (fontWidth != UNCHANGED) {
 		LOG_TO_STDERR();
-		return STATUS_NOT_INITIALISED;
+		return STATUS_INVALID_PARAM;
 	}
 
 	/* pigpio library not initialised */
@@ -735,13 +748,12 @@ status_t ssd_set_font(
 	}
 
 	/* Update the MPU font settings */
-	uint8_t commands[5];
+	uint8_t commands[4];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
 	commands[2] = COMMAND_HEIGHT_BIAS_SHIFT | m_UDx | m_BS1 | m_DHd;
 	commands[3] = COMMAND_EXTENDED_FUNCTION_SET | m_FW | m_BW | m_NW;
-	commands[4] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	status_t ret = i2c_write(commands, 5, NULL, 0);
+	status_t ret = i2c_write(commands, 4, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -749,15 +761,17 @@ status_t ssd_set_font(
 
 }
 
+/* ========================================================================== */
+/**@brief Sets the brightness of the SSD1803A LCD.
+ * ========================================================================== */
 status_t ssd_set_brightness(uint8_t displayBrightness) {
 
 	/* Set the display brightness */
-	if (displayBrightness <= MAX_BRIGHTNESS) {
-		m_Rabx = displayBrightness;
-	} else if (displayBrightness != UNCHANGED) {
+	if (displayBrightness > MAX_BRIGHTNESS) {
 		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
+	m_Rabx = (uint8_t)(MAX_BRIGHTNESS - displayBrightness);
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
@@ -766,11 +780,10 @@ status_t ssd_set_brightness(uint8_t displayBrightness) {
 	}
 
 	/* Update the brightness */
-	uint8_t commands[3];
+	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
 	commands[1] = COMMAND_FOLLOWER_CONTROL | m_Don | m_Rabx;
-	commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	status_t ret = i2c_write(commands, 3, NULL, 0);
+	status_t ret = i2c_write(commands, 2, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -778,10 +791,17 @@ status_t ssd_set_brightness(uint8_t displayBrightness) {
 
 }
 
+/* ========================================================================== */
+/**@brief Increments the brightness of the SSD1803A LCD by one.
+ * ========================================================================== */
 status_t ssd_increment_brightness(void) {
 
 	/* Set the display brightness */
-	m_Rabx = (uint8_t)(m_Rabx - (m_Rabx != MIN_BRIGHTNESS));
+	if (m_Rabx == MIN_BRIGHTNESS) {
+		LOG_TO_STDERR();
+		return STATUS_REACHED_MAX_MIN;
+	}
+	m_Rabx--;
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
@@ -790,11 +810,10 @@ status_t ssd_increment_brightness(void) {
 	}
 
 	/* Update the brightness */
-	uint8_t commands[3];
+	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
 	commands[1] = COMMAND_FOLLOWER_CONTROL | m_Don | m_Rabx;
-	commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	status_t ret = i2c_write(commands, 3, NULL, 0);
+	status_t ret = i2c_write(commands, 2, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -802,10 +821,17 @@ status_t ssd_increment_brightness(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Decrements the brightness of the SSD1803A LCD by one.
+ * ========================================================================== */
 status_t ssd_decrement_brightness(void) {
 
 	/* Set the display brightness */
-	m_Rabx = (uint8_t)(m_Rabx + (m_Rabx != MAX_BRIGHTNESS));
+	if (m_Rabx == MAX_BRIGHTNESS) {
+		LOG_TO_STDERR();
+		return STATUS_REACHED_MAX_MIN;
+	}
+	m_Rabx++;
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
@@ -814,11 +840,10 @@ status_t ssd_decrement_brightness(void) {
 	}
 
 	/* Update the brightness */
-	uint8_t commands[3];
+	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
 	commands[1] = COMMAND_FOLLOWER_CONTROL | m_Don | m_Rabx;
-	commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	status_t ret = i2c_write(commands, 3, NULL, 0);
+	status_t ret = i2c_write(commands, 2, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -826,17 +851,19 @@ status_t ssd_decrement_brightness(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Sets the contrast of the SSD1803A LCD.
+ * ========================================================================== */
 status_t ssd_set_contrast(uint8_t displayContrast) {
 
 	/* Set the display contrast */
-	if (displayContrast <= MAX_CONTRAST) {
-		m_Cx = displayContrast;
-		m_Ch = (m_Cx >> CH_SHIFT) & CH_MASK;
-		m_Cl = m_Cx & CL_MASK;
-	} else if (displayContrast != UNCHANGED) {
+	if (displayContrast > MAX_CONTRAST) {
 		LOG_TO_STDERR();
-		return STATUS_NOT_INITIALISED;
+		return STATUS_INVALID_PARAM;
 	}
+	m_Cx = displayContrast;
+	m_Ch = (m_Cx >> CH_SHIFT) & CH_MASK;
+	m_Cl = m_Cx & CL_MASK;
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
@@ -845,12 +872,11 @@ status_t ssd_set_contrast(uint8_t displayContrast) {
 	}
 
 	/* Update the contrast */
-	uint8_t commands[4];
+	uint8_t commands[3];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
 	commands[1] = COMMAND_POWER_ICON_CONTRAST | m_Ion | m_Bon | m_Ch;
 	commands[2] = COMMAND_CONTRAST_SET | m_Cl;
-	commands[3] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	status_t ret = i2c_write(commands, 4, NULL, 0);
+	status_t ret = i2c_write(commands, 3, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -858,10 +884,17 @@ status_t ssd_set_contrast(uint8_t displayContrast) {
 
 }
 
+/* ========================================================================== */
+/**@brief Increments the contrast of the SSD1803A LCD by one.
+ * ========================================================================== */
 status_t ssd_increment_contrast(void) {
 
 	/* Set the display contrast */
-	m_Cx = (uint8_t)(m_Cx + (m_Cx != MAX_CONTRAST));
+	if (m_Cx == MAX_CONTRAST) {
+		LOG_TO_STDERR();
+		return STATUS_REACHED_MAX_MIN;
+	}
+	m_Cx++;
 	m_Ch = (m_Cx >> CH_SHIFT) & CH_MASK;
 	m_Cl = m_Cx & CL_MASK;
 
@@ -871,13 +904,12 @@ status_t ssd_increment_contrast(void) {
 		return STATUS_NOT_INITIALISED;
 	}
 
-	/* Update the brightness */
-	uint8_t commands[4];
+	/* Update the contrast */
+	uint8_t commands[3];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
 	commands[1] = COMMAND_POWER_ICON_CONTRAST | m_Ion | m_Bon | m_Ch;
 	commands[2] = COMMAND_CONTRAST_SET | m_Cl;
-	commands[3] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	status_t ret = i2c_write(commands, 4, NULL, 0);
+	status_t ret = i2c_write(commands, 3, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -885,10 +917,17 @@ status_t ssd_increment_contrast(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Decrements the contrast of the SSD1803A LCD by one.
+ * ========================================================================== */
 status_t ssd_decrement_contrast(void) {
 
 	/* Set the display contrast */
-	m_Cx = (uint8_t)(m_Cx - (m_Cx != MIN_CONTRAST));
+	if (m_Cx == MIN_CONTRAST) {
+		LOG_TO_STDERR();
+		return STATUS_REACHED_MAX_MIN;
+	}
+	m_Cx--;
 	m_Ch = (m_Cx >> CH_SHIFT) & CH_MASK;
 	m_Cl = m_Cx & CL_MASK;
 
@@ -898,13 +937,12 @@ status_t ssd_decrement_contrast(void) {
 		return STATUS_NOT_INITIALISED;
 	}
 
-	/* Update the brightness */
-	uint8_t commands[4];
+	/* Update the contrast */
+	uint8_t commands[3];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
 	commands[1] = COMMAND_POWER_ICON_CONTRAST | m_Ion | m_Bon | m_Ch;
 	commands[2] = COMMAND_CONTRAST_SET | m_Cl;
-	commands[3] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	status_t ret = i2c_write(commands, 4, NULL, 0);
+	status_t ret = i2c_write(commands, 3, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -912,7 +950,13 @@ status_t ssd_decrement_contrast(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Clears the display of the SSD1803A.
+ * ========================================================================== */
 status_t ssd_clear_display(void) {
+
+	/* Reset the scroll quantity */
+	m_SQx = MIN_SCROLL;
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
@@ -920,6 +964,7 @@ status_t ssd_clear_display(void) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Clear the LCD screen */
 	uint8_t commands[1];
 	commands[0] = COMMAND_CLEAR_DISPLAY;
 	status_t ret = i2c_write(commands, 1, NULL, 0);
@@ -930,6 +975,9 @@ status_t ssd_clear_display(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Moves the cursor to the beginning of the first line.
+ * ========================================================================== */
 status_t ssd_move_cursor_line1(void) {
 
 	/* Set the DDRAM counter */
@@ -941,6 +989,7 @@ status_t ssd_move_cursor_line1(void) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Move the cursor to the first line */
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
@@ -952,13 +1001,16 @@ status_t ssd_move_cursor_line1(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Moves the cursor to the beginning of the second line.
+ * ========================================================================== */
 status_t ssd_move_cursor_line2(void) {
 
 	/* Set the DDRAM counter */
 	uint8_t lines = (m_N | m_NW);
 	if (lines == DISPLAY_ONE_LINE) {
 		LOG_TO_STDERR();
-		return STATUS_INVALID_ADDRESS;
+		return STATUS_INVALID_MODE;
 	} else if (lines == DISPLAY_TWO_LINES) {
 		m_AC = MIN_DDRAM_DOUBLE_LINE_LINE2;
 	} else if (lines == DISPLAY_THREE_LINES) {
@@ -973,6 +1025,7 @@ status_t ssd_move_cursor_line2(void) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Move the cursor to the second line */
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
@@ -984,13 +1037,16 @@ status_t ssd_move_cursor_line2(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Moves the cursor to the beginning of the third line.
+ * ========================================================================== */
 status_t ssd_move_cursor_line3(void) {
 
 	/* Set the DDRAM counter */
 	uint8_t lines = (m_N | m_NW);
 	if ((lines == DISPLAY_ONE_LINE) || (lines == DISPLAY_TWO_LINES)) {
 		LOG_TO_STDERR();
-		return STATUS_INVALID_ADDRESS;
+		return STATUS_INVALID_MODE;
 	} else if (lines == DISPLAY_THREE_LINES) {
 		m_AC = MIN_DDRAM_TRIPLE_LINE_LINE3;
 	} else if (lines == DISPLAY_FOUR_LINES) {
@@ -1003,6 +1059,7 @@ status_t ssd_move_cursor_line3(void) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Move the cursor to the third line */
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
@@ -1014,6 +1071,9 @@ status_t ssd_move_cursor_line3(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Moves the cursor to the beginning of the fourth line.
+ * ========================================================================== */
 status_t ssd_move_cursor_line4(void) {
 
 	/* Set the DDRAM counter */
@@ -1022,7 +1082,7 @@ status_t ssd_move_cursor_line4(void) {
 			(lines == DISPLAY_TWO_LINES) ||
 			(lines == DISPLAY_THREE_LINES)) {
 		LOG_TO_STDERR();
-		return STATUS_INVALID_ADDRESS;
+		return STATUS_INVALID_MODE;
 	} else if (lines == DISPLAY_FOUR_LINES) {
 		m_AC = MIN_DDRAM_QUADRUPLE_LINE_LINE4;
 	}
@@ -1033,6 +1093,7 @@ status_t ssd_move_cursor_line4(void) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Move the cursor to the fourth line */
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
@@ -1044,6 +1105,9 @@ status_t ssd_move_cursor_line4(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Moves the cursor one position to the left.
+ * ========================================================================== */
 status_t ssd_move_cursor_left(void) {
 
 	/* pigpio library not initialised */
@@ -1052,10 +1116,18 @@ status_t ssd_move_cursor_left(void) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Move the cursor left */
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_CURSOR_SHIFT | SHIFT_SCROLL_LEFT;
 	status_t ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+		return ret;
+	}
+
+	/* Update the address counter */
+	ret = ssd_get_address_counter(&m_AC);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -1063,6 +1135,9 @@ status_t ssd_move_cursor_left(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Moves the cursor one position to the right.
+ * ========================================================================== */
 status_t ssd_move_cursor_right(void) {
 
 	/* pigpio library not initialised */
@@ -1071,10 +1146,18 @@ status_t ssd_move_cursor_right(void) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Move the cursor right */
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_CURSOR_SHIFT | SHIFT_SCROLL_RIGHT;
 	status_t ret = i2c_write(commands, 2, NULL, 0);
+	if (ret != STATUS_OK) {
+		LOG_TO_STDERR();
+		return ret;
+	}
+
+	/* Update the address counter */
+	ret = ssd_get_address_counter(&m_AC);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -1082,31 +1165,35 @@ status_t ssd_move_cursor_right(void) {
 
 }
 
+/* ========================================================================== */
+/**@brief Moves the cursor to the specified line and position.
+ * ========================================================================== */
 status_t ssd_move_cursor(
 		uint8_t line,
 		uint8_t position) {
 	
+	/* Set the DDRAM counter */
 	uint8_t lines = (m_N | m_NW);
 	if (lines == DISPLAY_ONE_LINE) {
-		if ((line > LINE1) || (position > MAX_POSITION_1LINE)) {
+		if ((line > LINE_1) || (position > MAX_POSITION_1LINE)) {
 			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 		m_AC = position;
 	} else if (lines == DISPLAY_TWO_LINES) {
-		if ((line > LINE2) || (position > MAX_POSITION_2LINES)) {
+		if ((line > LINE_2) || (position > MAX_POSITION_2LINES)) {
 			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 		m_AC = (uint8_t)(0x40 * line + position % 0x28);
 	} else if (lines == DISPLAY_THREE_LINES) {
-		if ((line > LINE3) || (position > MAX_POSITION_3LINES)) {
+		if ((line > LINE_3) || (position > MAX_POSITION_3LINES)) {
 			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
 		m_AC = (uint8_t)(0x20 * line + position % 0x14);
 	} else if (lines == DISPLAY_FOUR_LINES) {
-		if ((line > LINE4) || (position > MAX_POSITION_4LINES)) {
+		if ((line > LINE_4) || (position > MAX_POSITION_4LINES)) {
 			LOG_TO_STDERR();
 			return STATUS_INVALID_PARAM;
 		}
@@ -1119,6 +1206,7 @@ status_t ssd_move_cursor(
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Move the cursor */
 	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
@@ -1130,19 +1218,20 @@ status_t ssd_move_cursor(
 
 }
 
+/* ========================================================================== */
+/**@brief Creates and saves a custom symbol to CGRAM.
+ * ========================================================================== */
 status_t ssd_create_symbol(
 		uint8_t *symbolData,
 		uint8_t symbolID) {
 
 	/* Set the CGRAM address */
-	uint8_t address;
 	if (symbolID > MAX_SYMBOL_ID) {
 		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
-	} else {
-		address = (uint8_t)(symbolID << SYMBOL_ID_SHIFT);
-		m_Symbols[symbolID] = true;
 	}
+	uint8_t address = (uint8_t)(symbolID << SYMBOL_ID_SHIFT);
+	m_Symbols[symbolID] = true;
 
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
@@ -1150,6 +1239,7 @@ status_t ssd_create_symbol(
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Change the current RAM to the CGRAM, and to it write the symbol */
 	uint8_t commands[3];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	commands[1] = COMMAND_ENTRY_MODE_SET | NORMAL_WRITE_DIRECTION | m_S;
@@ -1160,6 +1250,7 @@ status_t ssd_create_symbol(
 		return ret;
 	}
 
+	/* Revert the current RAM to the DDRAM */
 	commands[0] = COMMAND_ENTRY_MODE_SET | m_ID | m_S;
 	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
 	ret = i2c_write(commands, 2, NULL, 0);
@@ -1170,6 +1261,9 @@ status_t ssd_create_symbol(
 
 }
 
+/* ========================================================================== */
+/**@brief Writes the custom symbol to the SSD1803A LCD.
+ * ========================================================================== */
 status_t ssd_write_symbol(uint8_t symbolID) {
 
 	/* Validate the symbol */
@@ -1187,12 +1281,14 @@ status_t ssd_write_symbol(uint8_t symbolID) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Write the symbol to the LCD */
 	status_t ret = i2c_write(NULL, 0, &symbolID, 1);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
 
+	/* Update the DDRAM counter */
 	ret = ssd_get_address_counter(&m_AC);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
@@ -1201,6 +1297,9 @@ status_t ssd_write_symbol(uint8_t symbolID) {
 
 }
 
+/* ========================================================================== */
+/**@brief Writes the specified text to the SSD1803A LCD.
+ * ========================================================================== */
 status_t ssd_write_text(char *text) {
 
 	/* Validate the text to be written */
@@ -1216,12 +1315,14 @@ status_t ssd_write_text(char *text) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Write the text to the LCD */
 	status_t ret = i2c_write(NULL, 0, (uint8_t *)text, (uint8_t)length);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
 
+	/* Update the DDRAM counter */
 	ret = ssd_get_address_counter(&m_AC);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
@@ -1230,19 +1331,24 @@ status_t ssd_write_text(char *text) {
 
 }
 
+/* ========================================================================== */
+/**@brief Shifts all enabled lines.
+ * ========================================================================== */
 status_t ssd_shift_display(
 		uint8_t shiftAmount,
 		double shiftSpeed,
 		uint8_t shiftDirection) {
 
-	/* Verify the shift amount */
-	if (shiftAmount == 0) {
+	/* Verify the shift speed */
+	if (shiftSpeed < SHIFT_SCROLL_IMMEDIATE) {
 		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
 	}
-	
+
 	/* Verify the shift direction */
-	if ((shiftDirection != SHIFT_SCROLL_LEFT) &&
+	if ((shiftDirection == DEFAULT) && (shiftAmount == SHIFT_SCROLL_RESET)) {
+		// Do nothing
+	} else if ((shiftDirection != SHIFT_SCROLL_LEFT) &&
 			(shiftDirection != SHIFT_SCROLL_RIGHT)) {
 		LOG_TO_STDERR();
 		return STATUS_INVALID_PARAM;
@@ -1263,6 +1369,7 @@ status_t ssd_shift_display(
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Configure required extension registers */
 	uint8_t commands[shiftAmount];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
 	status_t ret = i2c_write(commands, 1, NULL, 0);
@@ -1270,6 +1377,20 @@ status_t ssd_shift_display(
 		LOG_TO_STDERR();
 		return ret;
 	}
+
+	/* Reset the display */
+	if (shiftAmount == SHIFT_SCROLL_RESET) {
+		uint8_t commands[2];
+		commands[0] = COMMAND_RETURN_HOME;
+		commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
+		status_t ret = i2c_write(commands, 2, NULL, 0);
+		if (ret != STATUS_OK) {
+			LOG_TO_STDERR();
+		}
+		return ret;
+	}
+
+	/* Immediately shift the display the specified amount */
 	if (shiftSpeed == SHIFT_SCROLL_IMMEDIATE) {
 		for (uint8_t i = 0; i < shiftAmount; i++) {
 			commands[i] = COMMAND_DISPLAY_SHIFT | shiftDirection;
@@ -1279,44 +1400,30 @@ status_t ssd_shift_display(
 			LOG_TO_STDERR();
 		}
 		return ret;
-	} else {
-		for (uint8_t i = 0; i < shiftAmount; i++) {
-			commands[0] = COMMAND_DISPLAY_SHIFT | shiftDirection;
-			ret = i2c_write(commands, 1, NULL, 0);
-			if (ret != STATUS_OK) {
-				LOG_TO_STDERR();
-				return ret;
-			}
-			pigpio_sleep(shiftSpeed);
+	}
+
+	/* Shift the display the specified amount at the specified speed */
+	for (uint8_t i = 0; i < shiftAmount; i++) {
+		commands[0] = COMMAND_DISPLAY_SHIFT | shiftDirection;
+		ret = i2c_write(commands, 1, NULL, 0);
+		if (ret != STATUS_OK) {
+			LOG_TO_STDERR();
+			return ret;
 		}
+		pigpio_sleep(shiftSpeed);
 	}
 
 	return STATUS_OK;
 
 }
 
+/* ========================================================================== */
+/**@brief Scrolls all enabled lines.
+ * ========================================================================== */
 status_t ssd_scroll_display(
-		uint8_t scrollAmount,
-		double scrollSpeed,
-		uint8_t scrollDirection) {
-
-	/* Verify scroll direction */
-	if ((scrollDirection != SHIFT_SCROLL_LEFT) &&
-			(scrollDirection != SHIFT_SCROLL_RIGHT)) {
-		LOG_TO_STDERR();
-		return STATUS_INVALID_PARAM;
-	}
-
-	/* Verify scroll amount */
-	if ((scrollDirection == SHIFT_SCROLL_LEFT) &&
-			(scrollAmount + m_SQx > MAX_SCROLL)) {
-		LOG_TO_STDERR();
-		return STATUS_INVALID_PARAM;
-	} else if ((scrollDirection == SHIFT_SCROLL_RIGHT) &&
-			((uint16_t)m_SQx - scrollAmount < MIN_SCROLL)) {
-		LOG_TO_STDERR();
-		return STATUS_INVALID_PARAM;
-	}
+		uint8_t startPosition,
+		uint8_t endPosition,
+		double scrollSpeed) {
 
 	/* Verify that a shift can occur */
 	if (m_DHd == DISPLAY_SHIFT_ENABLED) {
@@ -1327,70 +1434,69 @@ status_t ssd_scroll_display(
 		return STATUS_INVALID_MODE;
 	}
 
+	/* Set the start scroll quantity */
+	if ((startPosition <= MAX_SCROLL) && (startPosition != endPosition)) {
+		m_SQx = startPosition;
+	} else if (startPosition != UNCHANGED) {
+		LOG_TO_STDERR();
+		return STATUS_INVALID_PARAM;
+	}
+
+	/* Verify end scroll */
+	if (endPosition > MAX_SCROLL) {
+		LOG_TO_STDERR();
+		return STATUS_INVALID_PARAM;
+	} else if (scrollSpeed == SHIFT_SCROLL_IMMEDIATE) {
+		m_SQx = endPosition;
+	}
+
+	/* Verify the scroll speed */
+	if (scrollSpeed < SHIFT_SCROLL_IMMEDIATE) {
+		LOG_TO_STDERR();
+		return STATUS_INVALID_PARAM;
+	}
+
 	/* pigpio library not initialised */
 	if (!pigpio_is_initialised()) {
 		LOG_TO_STDERR();
 		return STATUS_NOT_INITIALISED;
 	}
 
-	uint8_t commands[3];
-	if (scrollAmount == MIN_SCROLL) {
-		m_SQx = scrollAmount;
-		commands[0] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
-		commands[1] = COMMAND_SET_SCROLL_QUANTITY | m_SQx;
-		commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-		status_t ret = i2c_write(commands, 3, NULL, 0);
-		if (ret != STATUS_OK) {
-			LOG_TO_STDERR();
-		}
-		return ret;
-	} else if (scrollSpeed == SHIFT_SCROLL_IMMEDIATE) {
-		if (scrollDirection == SHIFT_SCROLL_LEFT) {
-			m_SQx = (uint8_t)(m_SQx + scrollAmount);
-		} else {
-			m_SQx = (uint8_t)(m_SQx + scrollAmount);
-		}
-		commands[0] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
-		commands[1] = COMMAND_SET_SCROLL_QUANTITY | m_SQx;
-		commands[2] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-		status_t ret = i2c_write(commands, 3, NULL, 0);
-		if (ret != STATUS_OK) {
-			LOG_TO_STDERR();
-		}
-		return ret;
-	}
-
+	/* Configure required extension registers */
+	uint8_t commands[2];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_BE | RE_1 | m_REV;
-	status_t ret = i2c_write(commands, 1, NULL, 0);
+	commands[1] = COMMAND_SET_SCROLL_QUANTITY | m_SQx;
+	status_t ret = i2c_write(commands, 2, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
 
-	for (uint8_t i = 0; i < scrollAmount; i++) {
-		if (scrollDirection == SHIFT_SCROLL_LEFT) {
-			m_SQx = (uint8_t)(m_SQx + 1);
-		} else {
-			m_SQx = (uint8_t)(m_SQx - 1);
-		}
+	/* Immediately scroll to the specified end position */
+	if (scrollSpeed == SHIFT_SCROLL_IMMEDIATE) {
+		return STATUS_OK;
+	}
+
+	/* Scroll the specified amount at the specified speed */
+	do {
+		m_SQx = (uint8_t)(m_SQx + (m_SQx > endPosition) ? -1 : 1);
+
 		commands[0] = COMMAND_SET_SCROLL_QUANTITY | m_SQx;
-		status_t ret = i2c_write(commands, 1, NULL, 0);
+		ret = i2c_write(commands, 1, NULL, 0);
 		if (ret != STATUS_OK) {
 			LOG_TO_STDERR();
 			return ret;
 		}
 		pigpio_sleep(scrollSpeed);
-	}
+	} while (m_SQx != endPosition);
 
-	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	ret = i2c_write(commands, 1, NULL, 0);
-	if (ret != STATUS_OK) {
-		LOG_TO_STDERR();
-	}
-	return ret;
+	return STATUS_OK;
 
 }
 
+/* ========================================================================== */
+/**@brief Obtains the busy flag.
+ * ========================================================================== */
 status_t ssd_get_busy_flag(uint8_t *busyFlag) {
 
 	/* pigpio library not initialised */
@@ -1399,6 +1505,7 @@ status_t ssd_get_busy_flag(uint8_t *busyFlag) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Obtain the busy flag */
 	uint8_t data[2];
 	status_t ret = i2c_read(READ_AC_ID, data, LENGTH_AC_ID);
 	if (ret != STATUS_OK) {
@@ -1410,6 +1517,9 @@ status_t ssd_get_busy_flag(uint8_t *busyFlag) {
 
 }
 
+/* ========================================================================== */
+/**@brief Obtains the current address counter.
+ * ========================================================================== */
 status_t ssd_get_address_counter(uint8_t *currentAddress) {
 
 	/* pigpio library not initialised */
@@ -1418,6 +1528,7 @@ status_t ssd_get_address_counter(uint8_t *currentAddress) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Obtain the address counter */
 	uint8_t data[2];
 	status_t ret = i2c_read(READ_AC_ID, data, LENGTH_AC_ID);
 	if (ret != STATUS_OK) {
@@ -1429,6 +1540,9 @@ status_t ssd_get_address_counter(uint8_t *currentAddress) {
 
 }
 
+/* ========================================================================== */
+/**@brief Obtains the part ID of the SSD1803A.
+ * ========================================================================== */
 status_t ssd_get_part_id(uint8_t *partID) {
 
 	/* pigpio library not initialised */
@@ -1437,6 +1551,7 @@ status_t ssd_get_part_id(uint8_t *partID) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Obtain the part ID */
 	uint8_t data[2];
 	status_t ret = i2c_read(READ_AC_ID, data, LENGTH_AC_ID);
 	if (ret != STATUS_OK) {
@@ -1448,6 +1563,9 @@ status_t ssd_get_part_id(uint8_t *partID) {
 
 }
 
+/* ========================================================================== */
+/**@brief Reads data from the specified DDRAM address(es).
+ * ========================================================================== */
 status_t ssd_read_from_DDRAM(
 		uint8_t address,
 		uint8_t *data,
@@ -1515,24 +1633,30 @@ status_t ssd_read_from_DDRAM(
 		return STATUS_NOT_INITIALISED;
 	}
 
-	uint8_t commands[1];
+	/* Update the DDRAM to the specified address */
+	uint8_t commands[3];
 	uint8_t dataTemp[dataLength + 1];
-	commands[0] = COMMAND_SET_DDRAM_ADDRESS | address;
-	status_t ret = i2c_write(commands, 1, NULL, 0);
+	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
+	commands[1] = COMMAND_ENTRY_MODE_SET | NORMAL_WRITE_DIRECTION | m_S;
+	commands[2] = COMMAND_SET_DDRAM_ADDRESS | address;
+	status_t ret = i2c_write(commands, 3, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
 
+	/* Read the data from the DDRAM */
 	ret = i2c_read(READ_RAM, dataTemp, (uint8_t)(dataLength + 1));
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
-
 	memcpy(data, dataTemp + 1, dataLength);
-	commands[0] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
-	ret = i2c_write(commands, 1, NULL, 0);
+
+	/* Reset the DDRAM counter */
+	commands[0] = COMMAND_ENTRY_MODE_SET | m_ID | m_S;
+	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
+	ret = i2c_write(commands, 2, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -1540,6 +1664,9 @@ status_t ssd_read_from_DDRAM(
 
 }
 
+/* ========================================================================== */
+/**@brief Reads the data from the specified CGRAM address(es).
+ * ========================================================================== */
 status_t ssd_read_from_CGRAM(
 		uint8_t address,
 		uint8_t *data,
@@ -1563,25 +1690,30 @@ status_t ssd_read_from_CGRAM(
 		return STATUS_NOT_INITIALISED;
 	}
 
-	uint8_t commands[2];
+	/* Update the CGRAM to the specified address */
+	uint8_t commands[3];
 	uint8_t dataTemp[dataLength + 1];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
-	commands[1] = COMMAND_SET_CG_SEG_RAM_ADDRESS | address;
-	status_t ret = i2c_write(commands, 2, NULL, 0);
+	commands[1] = COMMAND_ENTRY_MODE_SET | NORMAL_WRITE_DIRECTION | m_S;
+	commands[2] = COMMAND_SET_CG_SEG_RAM_ADDRESS | address;
+	status_t ret = i2c_write(commands, 3, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
 
+	/* Read the data from the CGRAM */
 	ret = i2c_read(READ_RAM, dataTemp, (uint8_t)(dataLength + 1));
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
-
 	memcpy(data, dataTemp + 1, dataLength);
-	commands[0] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
-	ret = i2c_write(commands, 1, NULL, 0);
+
+	/* Reset the DDRAM counter */
+	commands[0] = COMMAND_ENTRY_MODE_SET | m_ID | m_S;
+	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
+	ret = i2c_write(commands, 2, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 	}
@@ -1589,6 +1721,9 @@ status_t ssd_read_from_CGRAM(
 
 }
 
+/* ========================================================================== */
+/**@brief Reads the data from the specified SEGRAM address(es).
+ * ========================================================================== */
 status_t ssd_read_from_SEGRAM(
 		uint8_t address,
 		uint8_t *data,
@@ -1612,25 +1747,29 @@ status_t ssd_read_from_SEGRAM(
 		return STATUS_NOT_INITIALISED;
 	}
 
-	uint8_t commands[2];
+	/* Update the SEGRAM to the specified address */
+	uint8_t commands[3];
 	uint8_t dataTemp[dataLength + 1];
 	commands[0] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_1;
-	commands[1] = COMMAND_SET_CG_SEG_RAM_ADDRESS | address;
-	status_t ret = i2c_write(commands, 2, NULL, 0);
+	commands[1] = COMMAND_ENTRY_MODE_SET | NORMAL_WRITE_DIRECTION | m_S;
+	commands[2] = COMMAND_SET_CG_SEG_RAM_ADDRESS | address;
+	status_t ret = i2c_write(commands, 3, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
 
+	/* Read the data from the SEGRAM */
 	ret = i2c_read(READ_RAM, dataTemp, (uint8_t)(dataLength + 1));
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
 		return ret;
 	}
-
 	memcpy(data, dataTemp + 1, dataLength);
-	commands[0] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
-	commands[1] = COMMAND_FUNCTION_SET | m_N | m_DH | RE_0 | IS_0;
+
+	/* Reset the DDRAM counter */
+	commands[0] = COMMAND_ENTRY_MODE_SET | m_ID | m_S;
+	commands[1] = COMMAND_SET_DDRAM_ADDRESS | m_AC;
 	ret = i2c_write(commands, 2, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
@@ -1639,6 +1778,9 @@ status_t ssd_read_from_SEGRAM(
 
 }
 
+/* ========================================================================== */
+/**@brief Writes a raw command over I2C to the SSD1803A display MPU.
+ * ========================================================================== */
 status_t ssd_write_command_raw(uint8_t command) {
 
 	/* pigpio library not initialised */
@@ -1647,6 +1789,7 @@ status_t ssd_write_command_raw(uint8_t command) {
 		return STATUS_NOT_INITIALISED;
 	}
 
+	/* Write the raw command */
 	status_t ret = i2c_write(&command, 1, NULL, 0);
 	if (ret != STATUS_OK) {
 		LOG_TO_STDERR();
