@@ -1479,7 +1479,7 @@ status_t ssd_scroll_display(
 
 	/* Scroll the specified amount at the specified speed */
 	do {
-		m_SQx = (uint8_t)(m_SQx + (m_SQx > endPosition) ? -1 : 1);
+		m_SQx = (uint8_t)(m_SQx + ((m_SQx > endPosition) ? -1 : 1));
 
 		commands[0] = COMMAND_SET_SCROLL_QUANTITY | m_SQx;
 		ret = i2c_write(commands, 1, NULL, 0);
