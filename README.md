@@ -2,8 +2,14 @@
 C library for the SSD1803A LCD Display MPU
 
 ## Installation ##
-To compile the source code into the static (libssd1803a.a) and shared (libssd1803a.so) libraries, simply run the command:
+To download the source code, simply run the commands:
 ```
+wget https://github.com/ksonter95/SSD1803A-C-API/archive/ssd1803a_v1.0.0.zip
+unzip ssd1803a_v1.0.0.zip && rm ssd1803a_v1.0.0.zip
+```
+To compile the source code into the static (libssd1803a.a) and shared (libssd1803a.so) libraries, simply run the commands:
+```
+cd SSD1803A-C-API-ssd1803a_v1.0.0
 make
 ```
 To install the libraries, simply run the command shown below, which will install the libraries into '/usr/local/lib' and the header file into '/usr/local/include':
